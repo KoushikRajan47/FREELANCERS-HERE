@@ -208,7 +208,7 @@ const renderService = (doc) => {
                     <p class="text-xs text-gray-500">${data.userEmail}</p>
                 </div>
                 <!-- This will be either the 'Connect' or 'Remove' button -->
-                ${ownerButton}
+                ${owner}
             </div>
         </div>
     `;
@@ -224,12 +224,31 @@ const fetchAndDisplayServices = () => {
     }
 
     console.log("Setting up new snapshot listener for services...");
-    const q = query(servicesCollection, orderBy('createdAt', 'desc'));
+    
+    // ===================================================================
+    // THE FIX:
+    // We remove `orderBy('createdAt', 'desc')` from the query, as it
+    // requires a manual Firestore Index to be created.
+    // const q = query(servicesCollection, orderBy('createdAt', 'desc')); // <-- This was causing the 400 Bad Request error
+    
+    // Now we fetch *without* ordering.
+    const q = query(servicesCollection);
+    // ===================================================================
     
     unsubscribe = onSnapshot(q, (snapshot) => {
         console.log("Received services snapshot. Docs count:", snapshot.docs.length);
         servicesGrid.innerHTML = ''; // Clear existing grid
-        allServices = snapshot.docs; // Update cache
+        
+        // ===================================================================
+        // THE FIX (Part 2):
+        // We sort the results here in JavaScript (client-side)
+        // to show newest first.
+        allServices = snapshot.docs.sort((a, b) => {
+            const dateA = a.data().createdAt?.toDate ? a.data().createdAt.toDate() : new Date(0);
+            const dateB = b.data().createdAt?.toDate ? b.data().createdAt.toDate() : new Date(0);
+            return dateB - dateA; // Sort descending (newest first)
+        });
+        // ===================================================================
         
         if(allServices.length === 0) {
             noServicesMsg.classList.remove('hidden');
