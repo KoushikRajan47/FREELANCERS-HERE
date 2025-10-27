@@ -20,3 +20,28 @@ body {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
 }
+
+/* Custom dark mode form styles */
+input[type="email"],
+input[type="password"],
+input[type="text"],
+textarea,
+select {
+    color-scheme: dark;
+}
+
+select option {
+    background: #030712; /* Tailwind gray-950 */
+    color: #d1d5db; /* Tailwind gray-300 */
+}
+
+::placeholder {
+    color: #4b5563; /* Tailwind gray-600 */
+}
+
+/* Custom text selection color for dark mode */
+::selection {
+    background-color: #3b82f6; /* Tailwind blue-500 */
+    color: #ffffff;
+}
+
