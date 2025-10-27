@@ -4,10 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FreelanceHub - Hire & Apply</title>
+    <!-- 1. Tailwind CSS for modern UI -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 2. Google Font (Inter) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://www.google.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 3. Custom Styles -->
     <style>
         body { font-family: 'Inter', sans-serif; }
         .line-clamp-3 {
@@ -23,20 +26,28 @@
 </head>
 <body class="bg-gray-50 text-gray-900">
 
+    <!-- ========================================
+         LOADING SPINNER (Initially Visible)
+         ======================================== -->
     <div id="loader" class="fixed inset-0 z-50 flex items-center justify-center bg-white">
         <div class="w-16 h-16 border-4 border-t-blue-600 border-gray-200 rounded-full animate-spin"></div>
     </div>
 
+    <!-- ========================================
+         AUTHENTICATION PAGE (Initially Hidden)
+         ======================================== -->
     <div id="auth-page" class="hidden min-h-screen flex items-center justify-center bg-gray-100 p-4">
         <div class="w-full max-w-md">
             <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">Welcome to FreelanceHub</h2>
             <div class="bg-white rounded-lg shadow-xl p-8">
+                <!-- Tabs for Login/Signup -->
                 <div class="mb-6 border-b border-gray-200">
                     <nav class="flex -mb-px" aria-label="Tabs">
                         <button id="auth-tab-login" class="w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm border-blue-500 text-blue-600">Log In</button>
                         <button id="auth-tab-signup" class="w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Sign Up</button>
                     </nav>
                 </div>
+                <!-- Login Form -->
                 <form id="login-form">
                     <div class="mb-4">
                         <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
@@ -48,6 +59,7 @@
                     </div>
                     <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-blue-700 transition duration-300">Log In</button>
                 </form>
+                <!-- Sign Up Form (Initially Hidden) -->
                 <form id="signup-form" class="hidden">
                     <div class="mb-4">
                         <label for="signup-name" class="block text-sm font-medium text-gray-700">Full Name</label>
@@ -68,7 +80,11 @@
         </div>
     </div>
 
+    <!-- ========================================
+         MAIN APPLICATION PAGE (Initially Hidden)
+         ======================================== -->
     <div id="app-page" class="hidden">
+        <!-- Header / Navbar -->
         <header class="bg-white shadow-sm sticky top-0 z-40">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
@@ -82,7 +98,9 @@
             </div>
         </header>
 
+        <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Filter Section -->
             <div class="mb-8">
                 <h2 class="text-xl font-semibold mb-4 text-gray-800">Browse Services</h2>
                 <div id="filter-container" class="flex flex-wrap gap-2">
@@ -96,12 +114,17 @@
                 </div>
             </div>
 
+            <!-- Services Grid -->
             <div id="services-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                </div>
+                <!-- Service cards will be inserted here by JavaScript -->
+            </div>
              <p id="no-services-message" class="hidden text-center text-gray-500 mt-12">No services found for this category. Be the first to post one!</p>
         </main>
     </div>
 
+    <!-- ========================================
+         POST SERVICE MODAL (Initially Hidden)
+         ======================================== -->
     <div id="post-service-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg overflow-hidden">
             <div class="flex justify-between items-center p-5 border-b">
@@ -137,29 +160,42 @@
     </div>
 
 
+    <!-- ========================================
+         JAVASCRIPT SECTION
+         ======================================== -->
+    <!-- Firebase SDKs -->
     <script type="module">
         // Import the functions you need from the SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, signInAnonymously, setLogLevel } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // =======================================================
         // YOUR FIREBASE CONFIGURATION - PASTE IT HERE!
         // =======================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyCPoBCgSMptHiACr_zjsKRrAVGsGNBWQns",
-            authDomain: "freelancer-here.firebaseapp.com",
-            projectId: "freelancer-here",
-            storageBucket: "freelancer-here.firebasestorage.app",
-            messagingSenderId: "383884579649",
-            appId: "1:383884579649:web:795caeb5c75af8090407c0"
-        };
+        // This config is provided by the environment, but you can paste yours here for local testing.
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config)
+            : {
+                apiKey: "YOUR_API_KEY",
+                authDomain: "YOUR_AUTH_DOMAIN",
+                projectId: "YOUR_PROJECT_ID",
+                storageBucket: "YOUR_STORAGE_BUCKET",
+                messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+                appId: "YOUR_APP_ID"
+            };
         // =======================================================
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        
+        // Enable debug logging for Firebase
+        setLogLevel('debug');
+
+        // This ID is provided by the environment.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         // --- DOM ELEMENT REFERENCES ---
         const loader = document.getElementById('loader');
@@ -198,17 +234,43 @@
         });
 
         // --- AUTH LOGIC ---
+        // Handle auth in the environment
+        async function initializeAuth() {
+            if (typeof __initial_auth_token !== 'undefined') {
+                try {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                    console.log("Signed in with custom token.");
+                } catch (error) {
+                    console.error("Custom token sign-in failed, signing in anonymously.", error);
+                    await signInAnonymously(auth);
+                }
+            } else {
+                console.log("No custom token, signing in anonymously.");
+                await signInAnonymously(auth);
+            }
+        }
+
         // Listen for Authentication state changes
         onAuthStateChanged(auth, user => {
             loader.classList.add('hidden'); // Hide loader once auth state is determined
             if (user) {
                 // User is logged in
+                console.log("User signed in:", user.uid);
                 authPage.classList.add('hidden');
                 appPage.classList.remove('hidden');
-                userGreeting.textContent = `Hello, ${user.displayName || user.email}!`;
-                fetchAndDisplayServices(); // Fetch services for the logged-in user
+                // Use display name if available, otherwise email, otherwise "Anonymous"
+                const userName = user.displayName || user.email || (user.isAnonymous ? "Anonymous User" : "Logged In User");
+                userGreeting.textContent = `Hello, ${userName}!`;
+                
+                // Only fetch services if NOT using our built-in auth forms
+                // If using forms, wait for explicit login/signup
+                if (user.isAnonymous || typeof __initial_auth_token !== 'undefined') {
+                     fetchAndDisplayServices();
+                }
+
             } else {
                 // User is logged out
+                console.log("User signed out.");
                 appPage.classList.add('hidden');
                 authPage.classList.remove('hidden');
                 userGreeting.textContent = '';
@@ -226,7 +288,9 @@
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 await updateProfile(userCredential.user, { displayName: name });
-                // No need to redirect, onAuthStateChanged will handle it
+                console.log("User signed up:", userCredential.user.uid);
+                // Manually call fetch services on successful signup
+                fetchAndDisplayServices(); 
                 signupForm.reset();
             } catch (error) {
                 authError.textContent = error.message;
@@ -241,8 +305,10 @@
             authError.textContent = '';
 
             try {
-                await signInWithEmailAndPassword(auth, email, password);
-                // No need to redirect, onAuthStateChanged will handle it
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log("User logged in:", userCredential.user.uid);
+                // Manually call fetch services on successful login
+                fetchAndDisplayServices();
                 loginForm.reset();
             } catch (error) {
                 authError.textContent = error.message;
@@ -255,7 +321,12 @@
         });
 
         // --- FIRESTORE & APP LOGIC ---
-        const servicesCollection = collection(db, 'services');
+        
+        // =======================================================
+        // !! THIS IS THE FIX !!
+        // We now build the correct path using the appId
+        // =======================================================
+        const servicesCollection = collection(db, `artifacts/${appId}/public/data/services`);
 
         // Render a single service card
         const renderService = (doc) => {
@@ -264,17 +335,19 @@
             card.className = 'bg-white rounded-lg shadow-md overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 service-card';
             card.dataset.domain = data.domain; // For filtering
             
+            const timestamp = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+            
             card.innerHTML = `
                 <div class="p-6">
                     <div class="flex items-start justify-between">
                          <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">${data.domain}</span>
-                         <span class="text-xs text-gray-500">${new Date(data.createdAt?.toDate()).toLocaleDateString()}</span>
+                         <span class="text-xs text-gray-500">${timestamp.toLocaleDateString()}</span>
                     </div>
                     <h3 class="text-lg font-bold mt-4 text-gray-900">${data.title}</h3>
                     <p class="mt-2 text-gray-600 text-sm line-clamp-3">${data.description}</p>
                     <div class="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-800">${data.userName}</p>
+                            <p class="text-sm font-medium text-gray-800">${data.userName || "Freelancer"}</p>
                             <p class="text-xs text-gray-500">${data.userEmail}</p>
                         </div>
                         <a href="mailto:${data.userEmail}?subject=Inquiry about your service: ${data.title}" class="bg-green-500 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-green-600 transition">Connect</a>
@@ -285,12 +358,21 @@
         }
 
         let allServices = []; // Cache for filtering
+        let unsubscribe = null; // To store the listener
         
         // Fetch and display all services in real-time
         const fetchAndDisplayServices = () => {
+            // Unsubscribe from any previous listener
+            if (unsubscribe) {
+                console.log("Unsubscribing from previous listener.");
+                unsubscribe();
+            }
+
+            console.log("Setting up new snapshot listener for services...");
             const q = query(servicesCollection, orderBy('createdAt', 'desc'));
             
-            onSnapshot(q, (snapshot) => {
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                console.log("Received services snapshot. Docs count:", snapshot.docs.length);
                 servicesGrid.innerHTML = ''; // Clear existing grid
                 allServices = snapshot.docs; // Update cache
                 
@@ -302,6 +384,8 @@
                 }
             }, (error) => {
                 console.error("Error fetching services: ", error);
+                // This is where your console error comes from
+                servicesGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">Error: ${error.message}</p>`;
             });
         }
 
@@ -323,8 +407,9 @@
         serviceForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const user = auth.currentUser;
-            if (!user) {
-                modalError.textContent = "You must be logged in to post a service.";
+            if (!user || user.isAnonymous) {
+                modalError.textContent = "You must be fully signed up to post a service.";
+                console.warn("Post attempt by anonymous user.");
                 return;
             }
             
@@ -333,7 +418,8 @@
             const domain = document.getElementById('service-domain').value;
 
             try {
-                await addDoc(servicesCollection, {
+                console.log("Attempting to add document...");
+                const docRef = await addDoc(servicesCollection, {
                     title: title,
                     description: description,
                     domain: domain,
@@ -342,11 +428,13 @@
                     userEmail: user.email,
                     createdAt: serverTimestamp()
                 });
+                console.log("Document written with ID: ", docRef.id);
                 // Close and reset modal on success
                 closeModalBtn.click();
             } catch (error) {
                 console.error("Error adding document: ", error);
-                modalError.textContent = "Failed to post service. Please try again.";
+                // This is where your other console error comes from
+                modalError.textContent = `Failed to post service: ${error.message}`;
             }
         });
 
@@ -378,6 +466,9 @@
                 }
             }
         });
+
+        // Initialize Auth on page load
+        initializeAuth();
 
     </script>
 </body>
