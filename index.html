@@ -16,50 +16,54 @@
     <!-- 3. Our Custom CSS File -->
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-50 text-gray-900">
+<body class="bg-black text-gray-300">
 
-    
-    <div id="loader" class="fixed inset-0 z-50 flex items-center justify-center bg-white">
-        <div class="w-16 h-16 border-4 border-t-blue-600 border-gray-200 rounded-full animate-spin"></div>
+    <!-- ========================================
+         LOADING SPINNER (Initially Visible)
+         ======================================== -->
+    <div id="loader" class="fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div class="w-16 h-16 border-4 border-t-blue-500 border-gray-800 rounded-full animate-spin"></div>
     </div>
 
-   
-    <div id="auth-page" class="hidden min-h-screen flex items-center justify-center bg-gray-100 p-4">
+    <!-- ========================================
+         AUTHENTICATION PAGE (Initially Hidden)
+         ======================================== -->
+    <div id="auth-page" class="hidden min-h-screen flex items-center justify-center bg-black p-4">
         <div class="w-full max-w-md">
-            <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">Welcome to FreelanceHub</h2>
-            <div class="bg-white rounded-lg shadow-xl p-8">
+            <h2 class="text-3xl font-bold text-center text-blue-500 mb-6">Welcome to FreelanceHub</h2>
+            <div class="bg-gray-950 rounded-lg shadow-2xl shadow-gray-900/50 border border-gray-800 p-8">
                 <!-- Tabs for Login/Signup -->
-                <div class="mb-6 border-b border-gray-200">
+                <div class="mb-6 border-b border-gray-700">
                     <nav class="flex -mb-px" aria-label="Tabs">
-                        <button id="auth-tab-login" class="w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm border-blue-500 text-blue-600">Log In</button>
-                        <button id="auth-tab-signup" class="w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Sign Up</button>
+                        <button id="auth-tab-login" class="w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm border-blue-500 text-blue-400">Log In</button>
+                        <button id="auth-tab-signup" class="w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600">Sign Up</button>
                     </nav>
                 </div>
                 <!-- Login Form -->
                 <form id="login-form">
                     <div class="mb-4">
-                        <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" id="login-email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="you@example.com">
+                        <label for="login-email" class="block text-sm font-medium text-gray-400">Email</label>
+                        <input type="email" id="login-email" required class="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="you@example.com">
                     </div>
                     <div class="mb-6">
-                        <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
-                        <input type="password" id="login-password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="••••••••">
+                        <label for="login-password" class="block text-sm font-medium text-gray-400">Password</label>
+                        <input type="password" id="login-password" required class="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="••••••••">
                     </div>
                     <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-blue-700 transition duration-300">Log In</button>
                 </form>
                 <!-- Sign Up Form (Initially Hidden) -->
                 <form id="signup-form" class="hidden">
                     <div class="mb-4">
-                        <label for="signup-name" class="block text-sm font-medium text-gray-700">Full Name</label>
-                        <input type="text" id="signup-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="John Doe">
+                        <label for="signup-name" class="block text-sm font-medium text-gray-400">Full Name</label>
+                        <input type="text" id="signup-name" required class="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="John Doe">
                     </div>
                     <div class="mb-4">
-                        <label for="signup-email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" id="signup-email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="you@example.com">
+                        <label for="signup-email" class="block text-sm font-medium text-gray-400">Email</label>
+                        <input type="email" id="signup-email" required class="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="you@example.com">
                     </div>
                     <div class="mb-6">
-                        <label for="signup-password" class="block text-sm font-medium text-gray-700">Password</LabeL>
-                        <input type="password" id="signup-password" minlength="6" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Min. 6 characters">
+                        <label for="signup-password" class="block text-sm font-medium text-gray-400">Password</LabeL>
+                        <input type="password" id="signup-password" minlength="6" required class="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Min. 6 characters">
                     </div>
                     <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-blue-700 transition duration-300">Create Account</button>
                 </form>
@@ -68,16 +72,19 @@
         </div>
     </div>
 
+    <!-- ========================================
+         MAIN APPLICATION PAGE (Initially Hidden)
+         ======================================== -->
     <div id="app-page" class="hidden">
         <!-- Header / Navbar -->
-        <header class="bg-white shadow-sm sticky top-0 z-40">
+        <header class="bg-black border-b border-gray-800 sticky top-0 z-40">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
-                    <h1 class="text-2xl font-bold text-blue-600">FreelanceHub</h1>
+                    <h1 class="text-2xl font-bold text-white">FreelanceHub</h1>
                     <div class="flex items-center space-x-4">
-                        <span id="user-greeting" class="text-sm font-medium text-gray-600 hidden sm:block"></span>
+                        <span id="user-greeting" class="text-sm font-medium text-gray-400 hidden sm:block"></span>
                         <button id="open-modal-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition">Post a Service</button>
-                        <button id="logout-btn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-semibold hover:bg-gray-300 transition">Logout</button>
+                        <button id="logout-btn" class="bg-gray-800 text-gray-300 px-4 py-2 rounded-md text-sm font-semibold hover:bg-gray-700 transition">Logout</button>
                     </div>
                 </div>
             </div>
@@ -87,15 +94,15 @@
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <!-- Filter Section -->
             <div class="mb-8">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800">Browse Services</h2>
+                <h2 class="text-xl font-semibold mb-4 text-white">Browse Services</h2>
                 <div id="filter-container" class="flex flex-wrap gap-2">
                     <button data-filter="all" class="filter-btn bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm">All</button>
-                    <button data-filter="Content Writing" class="filter-btn bg-white text-gray-700 px-4 py-1.5 rounded-full text-sm border border-gray-300 hover:bg-gray-100">Content Writing</button>
-                    <button data-filter="Project Making" class="filter-btn bg-white text-gray-700 px-4 py-1.5 rounded-full text-sm border border-gray-300 hover:bg-gray-100">Project Making</button>
-                    <button data-filter="Coding" class="filter-btn bg-white text-gray-700 px-4 py-1.5 rounded-full text-sm border border-gray-300 hover:bg-gray-100">Coding</button>
-                    <button data-filter="Video Editing" class="filter-btn bg-white text-gray-700 px-4 py-1.5 rounded-full text-sm border border-gray-300 hover:bg-gray-100">Video Editing</button>
-                    <button data-filter="Photography" class="filter-btn bg-white text-gray-700 px-4 py-1.5 rounded-full text-sm border border-gray-300 hover:bg-gray-100">Photography</button>
-                    <button data-filter="Presentations" class="filter-btn bg-white text-gray-700 px-4 py-1.5 rounded-full text-sm border border-gray-300 hover:bg-gray-100">Presentations</button>
+                    <button data-filter="Content Writing" class="filter-btn bg-gray-800 text-gray-300 px-4 py-1.5 rounded-full text-sm border border-gray-700 hover:bg-gray-700">Content Writing</button>
+                    <button data-filter="Project Making" class="filter-btn bg-gray-800 text-gray-300 px-4 py-1.5 rounded-full text-sm border border-gray-700 hover:bg-gray-700">Project Making</button>
+                    <button data-filter="Coding" class="filter-btn bg-gray-800 text-gray-300 px-4 py-1.5 rounded-full text-sm border border-gray-700 hover:bg-gray-700">Coding</button>
+                    <button data-filter="Video Editing" class="filter-btn bg-gray-800 text-gray-300 px-4 py-1.5 rounded-full text-sm border border-gray-700 hover:bg-gray-700">Video Editing</button>
+                    <button data-filter="Photography" class="filter-btn bg-gray-800 text-gray-300 px-4 py-1.5 rounded-full text-sm border border-gray-700 hover:bg-gray-700">Photography</button>
+                    <button data-filter="Presentations" class="filter-btn bg-gray-800 text-gray-300 px-4 py-1.5 rounded-full text-sm border border-gray-700 hover:bg-gray-700">Presentations</button>
                 </div>
             </div>
 
@@ -107,25 +114,27 @@
         </main>
     </div>
 
-   
-    <div id="post-service-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg overflow-hidden">
-            <div class="flex justify-between items-center p-5 border-b">
-                <h3 class="text-xl font-semibold text-gray-800">Offer a New Service</h3>
-                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600">&times;</button>
+    <!-- ========================================
+         POST SERVICE MODAL (Initially Hidden)
+         ======================================== -->
+    <div id="post-service-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-950 rounded-lg shadow-2xl w-full max-w-lg overflow-hidden border border-gray-800">
+            <div class="flex justify-between items-center p-5 border-b border-gray-700">
+                <h3 class="text-xl font-semibold text-white">Offer a New Service</h3>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-300 text-3xl">&times;</button>
             </div>
             <form id="service-form" class="p-6 space-y-4 max-h-[70vh] overflow-y-auto modal-content">
                 <div>
-                    <label for="service-title" class="block text-sm font-medium text-gray-700">Service Title</label>
-                    <input type="text" id="service-title" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., I will create a modern logo for your brand">
+                    <label for="service-title" class="block text-sm font-medium text-gray-400">Service Title</label>
+                    <input type="text" id="service-title" required class="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., I will create a modern logo for your brand">
                 </div>
                 <div>
-                    <label for="service-description" class="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea id="service-description" rows="4" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Describe the service you are offering in detail."></textarea>
+                    <label for="service-description" class="block text-sm font-medium text-gray-400">Description</label>
+                    <textarea id="service-description" rows="4" required class="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Describe the service you are offering in detail."></textarea>
                 </div>
                 <div>
-                    <label for="service-domain" class="block text-sm font-medium text-gray-700">Domain / Category</label>
-                    <select id="service-domain" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                    <label for="service-domain" class="block text-sm font-medium text-gray-400">Domain / Category</label>
+                    <select id="service-domain" required class="mt-1 block w-full pl-3 pr-10 py-2 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                         <option>Content Writing</option>
                         <option>Project Making</option>
                         <option>Coding</option>
@@ -142,7 +151,12 @@
         </div>
     </div>
 
-   
+    <!-- 
+      ========================================
+      Our Custom JavaScript File
+      - We use type="module" to allow 'import' statements
+      ======================================== 
+    -->
     <script src="script.js" type="module"></script>
 
 </body>
