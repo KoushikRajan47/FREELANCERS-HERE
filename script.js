@@ -83,20 +83,20 @@ const filterContainer = document.getElementById('filter-container');
 loginTab.addEventListener('click', () => {
     loginForm.classList.remove('hidden');
     signupForm.classList.add('hidden');
-    loginTab.classList.add('border-blue-500', 'text-blue-600');
+    loginTab.classList.add('border-blue-500', 'text-blue-400');
     loginTab.classList.remove('border-transparent', 'text-gray-500');
     signupTab.classList.add('border-transparent', 'text-gray-500');
-    signupTab.classList.remove('border-blue-500', 'text-blue-600');
+    signupTab.classList.remove('border-blue-500', 'text-blue-400');
     authError.textContent = '';
 });
 
 signupTab.addEventListener('click', () => {
     signupForm.classList.remove('hidden');
     loginForm.classList.add('hidden');
-    signupTab.classList.add('border-blue-500', 'text-blue-600');
+    signupTab.classList.add('border-blue-500', 'text-blue-400');
     signupTab.classList.remove('border-transparent', 'text-gray-500');
     loginTab.classList.add('border-transparent', 'text-gray-500');
-    loginTab.classList.remove('border-blue-500', 'text-blue-600');
+    loginTab.classList.remove('border-blue-500', 'text-blue-400');
     authError.textContent = '';
 });
 
@@ -181,7 +181,9 @@ const renderService = (doc) => {
     const card = document.createElement('div');
     // We add the service doc.id to the card's dataset for easy access
     card.dataset.id = doc.id; 
-    card.className = 'bg-white rounded-lg shadow-md overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 service-card';
+    
+    // --- DARK MODE UI UPDATE ---
+    card.className = 'bg-gray-950 rounded-lg shadow-lg border border-gray-800 overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 service-card';
     card.dataset.domain = data.domain; // For filtering
     
     const timestamp = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
@@ -191,21 +193,22 @@ const renderService = (doc) => {
     
     // Create the "Remove" button only if the user is the owner
     const ownerButton = isOwner 
-        ? `<button class="delete-btn bg-red-500 text-white px-3 py-1 rounded-md text-xs font-semibold hover:bg-red-600 transition">Remove</button>`
-        : `<a href="mailto:${data.userEmail}?subject=Inquiry about your service: ${data.title}" class="bg-green-500 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-green-600 transition">Connect</a>`;
+        ? `<button class="delete-btn bg-red-600 text-white px-3 py-1 rounded-md text-xs font-semibold hover:bg-red-500 transition">Remove</button>`
+        : `<a href="mailto:${data.userEmail}?subject=Inquiry about your service: ${data.title}" class="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-green-500 transition">Connect</a>`;
 
+    // --- DARK MODE UI UPDATE ---
     card.innerHTML = `
         <div class="p-6">
             <div class="flex items-start justify-between">
-                 <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">${data.domain}</span>
-                 <span class="text-xs text-gray-500">${timestamp.toLocaleDateString()}</span>
+                 <span class="inline-block bg-blue-900/50 text-blue-300 text-xs font-semibold px-2.5 py-0.5 rounded-full">${data.domain}</span>
+                 <span class="text-xs text-gray-400">${timestamp.toLocaleDateString()}</span>
             </div>
-            <h3 class="text-lg font-bold mt-4 text-gray-900">${data.title}</h3>
-            <p class="mt-2 text-gray-600 text-sm line-clamp-3">${data.description}</p>
-            <div class="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-bold mt-4 text-white">${data.title}</h3>
+            <p class="mt-2 text-gray-400 text-sm line-clamp-3">${data.description}</p>
+            <div class="mt-6 pt-4 border-t border-gray-700 flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-800">${data.userName || "Freelancer"}</p>
-                    <p class="text-xs text-gray-500">${data.userEmail}</p>
+                    <p class="text-sm font-medium text-gray-200">${data.userName || "Freelancer"}</p>
+                    <p class="text-xs text-gray-400">${data.userEmail}</p>
                 </div>
                 <!-- This will be either the 'Connect' or 'Remove' button -->
                 ${ownerButton}
@@ -225,30 +228,19 @@ const fetchAndDisplayServices = () => {
 
     console.log("Setting up new snapshot listener for services...");
     
-    // ===================================================================
-    // THE FIX:
-    // We remove `orderBy('createdAt', 'desc')` from the query, as it
-    // requires a manual Firestore Index to be created.
-    // const q = query(servicesCollection, orderBy('createdAt', 'desc')); // <-- This was causing the 400 Bad Request error
-    
-    // Now we fetch *without* ordering.
+    // We fetch *without* ordering to avoid needing a Firestore Index
     const q = query(servicesCollection);
-    // ===================================================================
     
     unsubscribe = onSnapshot(q, (snapshot) => {
         console.log("Received services snapshot. Docs count:", snapshot.docs.length);
         servicesGrid.innerHTML = ''; // Clear existing grid
         
-        // ===================================================================
-        // THE FIX (Part 2):
-        // We sort the results here in JavaScript (client-side)
-        // to show newest first.
+        // We sort the results here in JavaScript (client-side) to show newest first.
         allServices = snapshot.docs.sort((a, b) => {
             const dateA = a.data().createdAt?.toDate ? a.data().createdAt.toDate() : new Date(0);
             const dateB = b.data().createdAt?.toDate ? b.data().createdAt.toDate() : new Date(0);
             return dateB - dateA; // Sort descending (newest first)
         });
-        // ===================================================================
         
         if(allServices.length === 0) {
             noServicesMsg.classList.remove('hidden');
@@ -268,7 +260,8 @@ const fetchAndDisplayServices = () => {
 
     }, (error) => {
         console.error("Error fetching services: ", error);
-        servicesGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">Error: ${error.message}</p>`;
+        // --- DARK MODE UI UPDATE ---
+        servicesGrid.innerHTML = `<p class="text-red-400 col-span-full text-center">Error: ${error.message}</p>`;
     });
 }
 
@@ -285,9 +278,7 @@ servicesGrid.addEventListener('click', async (e) => {
             return;
         }
 
-        // Ask for confirmation (using a simple, non-blocking confirm)
-        // We avoid alert() and confirm() in production, but this is a simple demo
-        // A custom modal would be better.
+        // We are using the browser's confirm() for simplicity.
         const wantsToDelete = confirm("Are you sure you want to remove this service?");
 
         if (wantsToDelete) {
@@ -377,15 +368,15 @@ filterContainer.addEventListener('click', (e) => {
         // Update active button style
         filterContainer.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.remove('bg-blue-600', 'text-white');
-            btn.classList.add('bg-white', 'text-gray-700');
+            // --- DARK MODE UI UPDATE ---
+            btn.classList.add('bg-gray-800', 'text-gray-300', 'border-gray-700', 'hover:bg-gray-700');
         });
         e.target.classList.add('bg-blue-600', 'text-white');
-        e.target.classList.remove('bg-white', 'text-gray-700');
+        e.target.classList.remove('bg-gray-800', 'text-gray-300', 'border-gray-700', 'hover:bg-gray-700');
 
         // Perform filtering
         const filterValue = e.target.dataset.filter;
         filterServices(filterValue);
     }
 });
-
 
