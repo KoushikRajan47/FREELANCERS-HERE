@@ -1,0 +1,22 @@
+/* Use the same font as Tailwind's default */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Custom class for truncating text to 3 lines */
+.line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+/* Hide scrollbar for a cleaner look in the modal */
+.modal-content::-webkit-scrollbar {
+    display: none;
+}
+
+.modal-content {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
