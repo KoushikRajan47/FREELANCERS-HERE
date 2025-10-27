@@ -208,7 +208,7 @@ const renderService = (doc) => {
                     <p class="text-xs text-gray-500">${data.userEmail}</p>
                 </div>
                 <!-- This will be either the 'Connect' or 'Remove' button -->
-                ${owner}
+                ${ownerButton}
             </div>
         </div>
     `;
@@ -387,3 +387,5 @@ filterContainer.addEventListener('click', (e) => {
         filterServices(filterValue);
     }
 });
+
+
