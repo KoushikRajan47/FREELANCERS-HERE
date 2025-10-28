@@ -16,7 +16,7 @@
     <!-- 3. Our Custom CSS File -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- 4. Icon Library (Lucide) - *** THIS IS THE FIX *** -->
+    <!-- 4. Icon Library (Lucide) -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body class="bg-dark text-gray-300">
@@ -33,23 +33,23 @@
          ======================================== -->
     <div id="auth-page" class="hidden min-h-screen flex items-center justify-center bg-dark p-4">
         <div class="w-full max-w-md">
-            <h2 class="text-3xl font-bold text-center text-blue-bright mb-6">Welcome to FreelanceHub</h2>
+            <h2 class="text-3xl font-bold text-center text-primary-red mb-6">Welcome to FreelanceHub</h2>
             <div class="card-dark rounded-lg shadow-2xl shadow-black/30 p-8">
                 <!-- Tabs for Login/Signup -->
                 <div class="mb-6 border-b border-muted-gray">
                     <nav class="flex -mb-px" aria-label="Tabs">
-                        <button id="auth-tab-login" class="w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm border-blue-bright text-blue-bright">Log In</button>
-                        <button id="auth-tab-signup" class="w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm border-transparent text-grey-light hover:text-white hover:border-muted-gray">Sign Up</button>
+                        <button id="auth-tab-login" class="w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm border-primary-red text-primary-red">Log In</button>
+                        <button id="auth-tab-signup" class="w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm border-transparent text-text-grey hover:text-white hover:border-muted-gray">Sign Up</button>
                     </nav>
                 </div>
                 <!-- Login Form -->
                 <form id="login-form">
                     <div class="mb-4">
-                        <label for="login-email" class="block text-sm font-medium text-grey">Email</label>
+                        <label for="login-email" class="block text-sm font-medium text-text-grey">Email</label>
                         <input type="email" id="login-email" required class="form-input" placeholder="you@example.com">
                     </div>
                     <div class="mb-6">
-                        <label for="login-password" class="block text-sm font-medium text-grey">Password</label>
+                        <label for="login-password" class="block text-sm font-medium text-text-grey">Password</label>
                         <input type="password" id="login-password" required class="form-input" placeholder="••••••••">
                     </div>
                     <button type="submit" class="btn-primary w-full">Log In</button>
@@ -57,20 +57,20 @@
                 <!-- Sign Up Form (Initially Hidden) -->
                 <form id="signup-form" class="hidden">
                     <div class="mb-4">
-                        <label for="signup-name" class="block text-sm font-medium text-grey">Full Name</label>
+                        <label for="signup-name" class="block text-sm font-medium text-text-grey">Full Name</label>
                         <input type="text" id="signup-name" required class="form-input" placeholder="John Doe">
                     </div>
                     <div class="mb-4">
-                        <label for="signup-email" class="block text-sm font-medium text-grey">Email</label>
+                        <label for="signup-email" class="block text-sm font-medium text-text-grey">Email</label>
                         <input type="email" id="signup-email" required class="form-input" placeholder="you@example.com">
                     </div>
                     <div class="mb-6">
-                        <label for="signup-password" class="block text-sm font-medium text-grey">Password</LabeL>
+                        <label for="signup-password" class="block text-sm font-medium text-text-grey">Password</LabeL>
                         <input type="password" id="signup-password" minlength="6" required class="form-input" placeholder="Min. 6 characters">
                     </div>
                     <button type="submit" class="btn-primary w-full">Create Account</button>
                 </form>
-                <p id="auth-error" class="text-red text-sm mt-4 text-center"></p>
+                <p id="auth-error" class="text-primary-red text-sm mt-4 text-center"></p>
             </div>
         </div>
     </div>
@@ -80,12 +80,12 @@
          ======================================== -->
     <div id="app-page" class="hidden flex flex-col min-h-screen">
         <!-- Header / Navbar -->
-        <header class="bg-nav-dark border-b border-muted-gray sticky top-0 z-40">
+        <header class="bg-dark border-b border-muted-gray sticky top-0 z-40">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
-                    <h1 class="text-2xl font-bold text-white cursor-pointer" id="nav-home-btn">FreelanceHub</h1>
+                    <h1 class="text-2xl font-bold text-primary-red cursor-pointer tracking-wider" id="nav-home-btn">FreelanceHub</h1>
                     <div class="flex items-center space-x-4">
-                        <button id="nav-profile-btn" class="text-grey-light hover:text-white transition">My Profile</button>
+                        <button id="nav-profile-btn" class="nav-link">My Profile</button>
                         <button id="open-modal-btn" class="btn-primary-sm">Post a Service</button>
                         <button id="logout-btn" class="btn-secondary-sm">Logout</button>
                     </div>
@@ -116,7 +116,7 @@
                 <div id="services-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     <!-- Service cards will be inserted here by JavaScript -->
                 </div>
-                <p id="no-services-message" class="hidden text-center text-grey mt-12">No services found. Be the first to post one!</p>
+                <p id="no-services-message" class="hidden text-center text-text-grey mt-12">No services found. Be the first to post one!</p>
             </div>
 
             <!-- PAGE 2: PROFILE PAGE (Hidden by default) -->
@@ -134,19 +134,19 @@
         <div class="card-dark rounded-lg shadow-2xl w-full max-w-lg overflow-hidden border border-muted-gray">
             <div class="flex justify-between items-center p-5 border-b border-muted-gray">
                 <h3 class="text-xl font-semibold text-white">Offer a New Service</h3>
-                <button id="close-modal-btn" class="text-grey-light hover:text-white text-3xl">&times;</button>
+                <button id="close-modal-btn" class="text-text-grey hover:text-white text-3xl transition-colors">&times;</button>
             </div>
             <form id="service-form" class="p-6 space-y-4 max-h-[70vh] overflow-y-auto modal-content">
                 <div>
-                    <label for="service-title" class="block text-sm font-medium text-grey">Service Title</label>
+                    <label for="service-title" class="block text-sm font-medium text-text-grey">Service Title</label>
                     <input type="text" id="service-title" required class="form-input" placeholder="e.g., I will create a modern logo for your brand">
                 </div>
                 <div>
-                    <label for="service-description" class="block text-sm font-medium text-grey">Description</label>
+                    <label for="service-description" class="block text-sm font-medium text-text-grey">Description</label>
                     <textarea id="service-description" rows="4" required class="form-input" placeholder="Describe the service you are offering in detail."></textarea>
                 </div>
                 <div>
-                    <label for="service-domain" class="block text-sm font-medium text-grey">Domain / Category</label>
+                    <label for="service-domain" class="block text-sm font-medium text-text-grey">Domain / Category</label>
                     <select id="service-domain" required class="form-input">
                         <option>Content Writing</option>
                         <option>Project Making</option>
@@ -156,7 +156,7 @@
                         <option>Presentations</option>
                     </select>
                 </div>
-                <p id="modal-error" class="text-red text-sm text-center"></p>
+                <p id="modal-error" class="text-primary-red text-sm text-center"></p>
                 <div class="pt-4 flex justify-end">
                     <button type="submit" class="btn-primary w-full">Post Service</button>
                 </div>
@@ -165,7 +165,7 @@
     </div>
     
     <!-- Custom Toast Notification -->
-    <div id="toast-notification" class="hidden fixed bottom-10 right-10 bg-green text-white px-6 py-3 rounded-lg shadow-lg z-50">
+    <div id="toast-notification" class="hidden fixed bottom-10 right-10 text-white px-6 py-3 rounded-lg shadow-lg z-50">
         <p>Toast message!</p>
     </div>
 
@@ -178,14 +178,6 @@
     -->
     <script src="script.js" type="module"></script>
     
-    <!-- 
-      Script for Lucide Icons
-      - This MUST come AFTER script.js (as a module) to ensure 'lucide' is defined
-      - Or just call it from within the JS module.
-      - We will call `lucide.createIcons()` from within our script.js
-        whenever new content is added.
-    -->
-
 </body>
 </html>
 
