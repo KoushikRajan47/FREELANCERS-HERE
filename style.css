@@ -1,43 +1,27 @@
 /* ========================================
-  NEW UI COLOR PALETTE
+  NETFLIX UI COLOR PALETTE
 ========================================
 */
 :root {
   /* Core brand / theme colors */
-  --blue-bright:    #323ef9;   /* bright blue — primary buttons, active elements */
-  --blue-royal:     #4763fa;   /* royal blue — secondary accents */
-  --sky:            #5bcefb;   /* light sky blue — highlights, chips */
-  --mint:           #b8fdf0;   /* mint — soft accent, backgrounds */
-  --purple:         #7c79f7;   /* purple — interactive, emphasis */
-  --pink:           #fab0e1;   /* pink — floating actions */
-  --pink-soft:      #fddffe;   /* pale pink — ratings or highlights */
-
-  /* Grayscale / backgrounds */
-  --light:          #f5f7fb;
-  --grey-lightest:  #e5e9f3;
-  --grey-lighter:   #c9cdd8;
-  --grey-light:     #a5a8b5;
-  --grey:           #737888;
-  --grey-dark:      #424768;
-  --grey-darker:    #1f2331;
-  --grey-darkest:   #0e1120;
-
-  /* Dark theme backgrounds */
-  --bg-dark:        #030823;   /* page background (deep navy) */
-  --nav-dark:       #070b12;   /* navbar */
-  --card-dark:      #101958;   /* panels, cards */
-
-  /* Alert colors */
-  --green:          #37a993;   /* success */
-  --gold:           #bdb149;   /* warning */
-  --red:            #dc2046;   /* error */
-
-  /* Border / neutral */
-  --muted-gray:     #424768;
-  --soft-gray:      #918b88;
+  --primary-red:        #E50914;   /* Netflix Red */
+  --primary-red-hover:  #B20710;   /* Darker Red for hover */
   
-  /* Gradients */
-  --gradient-blue: linear-gradient(90deg, #5bcefb, #323ef9);
+  /* Backgrounds */
+  --bg-dark:            #141414;   /* Page background (Netflix dark grey) */
+  --card-dark:          #222222;   /* Panels, cards, inputs */
+  --nav-dark:           #000000;   /* Navbar (Pure black) */
+
+  /* Text */
+  --text-light:         #f5f5f5;   /* Main text (off-white) */
+  --text-grey:          #808080;   /* Subtitles, labels */
+
+  /* Accents */
+  --success:            #37a993;   /* Success green */
+  --warning:            #bdb149;   /* Rating star color */
+
+  /* Borders / neutral */
+  --muted-gray:         #404040;
 }
 
 /* ========================================
@@ -47,86 +31,125 @@
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-dark);
-    color: var(--grey-light);
+    color: var(--text-light);
 }
 
 /* Custom text selection color */
 ::selection {
-    background-color: var(--blue-bright);
+    background-color: var(--primary-red);
     color: white;
 }
 
 /* Custom dark mode form styles */
 .form-input {
     @apply mt-1 block w-full px-3 py-2 rounded-md shadow-sm;
-    @apply bg-grey-darker border border-muted-gray text-white;
-    @apply focus:outline-none focus:ring-2 focus:ring-blue-bright/50 focus:border-blue-bright;
+    @apply bg-card-dark border border-muted-gray text-white;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-red/50 focus:border-primary-red;
     color-scheme: dark;
+    transition: all 0.2s ease-in-out;
 }
-
 select.form-input option {
-    background: var(--grey-darker);
-    color: var(--grey-light);
+    background: var(--card-dark);
+    color: var(--text-light);
 }
-
 ::placeholder {
-    color: var(--grey);
+    color: var(--text-grey);
 }
 
 /* Custom Card Style */
 .card-dark {
     background-color: var(--card-dark);
     border: 1px solid var(--muted-gray);
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+.card-dark:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* Toast Notification Colors */
+.bg-success {
+    background-color: var(--success);
+}
+.bg-danger {
+    background-color: var(--primary-red);
 }
 
 /* ========================================
-  BUTTONS
+  BUTTONS & ANIMATIONS
 ========================================
 */
+
+/* Base animation for all buttons */
+.btn-primary, .btn-primary-sm, .btn-secondary-sm, .btn-danger-sm, .filter-btn, .nav-link {
+    transition: transform 0.2s ease-out, background-color 0.2s ease-out, color 0.2s ease-out, border-color 0.2s ease-out;
+}
+.btn-primary:hover, .btn-primary-sm:hover, .btn-secondary-sm:hover, .btn-danger-sm:hover, .filter-btn:hover, .nav-link:hover {
+    transform: scale(1.05); /* "Pop" animation */
+}
+
 .btn-primary {
     @apply py-2 px-5 rounded-md font-semibold text-white;
-    background-color: var(--blue-bright);
-    transition: background-color 0.2s ease;
+    background-color: var(--primary-red);
 }
 .btn-primary:hover {
-    background-color: var(--blue-royal);
+    background-color: var(--primary-red-hover);
 }
 .btn-primary:disabled {
     @apply opacity-50 cursor-not-allowed;
+    transform: scale(1); /* No pop on disabled */
 }
 
 .btn-primary-sm {
-    @apply py-2 px-4 rounded-md text-sm font-semibold text-white;
-    background-color: var(--blue-bright);
-    transition: background-color 0.2s ease;
+    @apply py-1 px-3 rounded-md text-sm font-semibold text-white;
+    background-color: var(--primary-red);
 }
 .btn-primary-sm:hover {
-    background-color: var(--blue-royal);
+    background-color: var(--primary-red-hover);
 }
 
 .btn-secondary-sm {
-    @apply py-2 px-4 rounded-md text-sm font-semibold;
-    @apply bg-grey-darker text-grey-light border border-muted-gray;
-    transition: background-color 0.2s ease;
+    @apply py-1 px-3 rounded-md text-sm font-semibold;
+    @apply bg-text-grey/30 text-text-light border border-transparent;
 }
 .btn-secondary-sm:hover {
-    background-color: var(--grey-dark);
+    background-color: var(--text-grey)/50;
+}
+
+/* New class for the "Delete" button */
+.btn-danger-sm {
+    @apply py-1 px-3 rounded-md text-sm font-semibold;
+    background: rgba(229, 9, 20, 0.1);
+    color: var(--primary-red);
+    border: 1px solid var(--primary-red);
+}
+.btn-danger-sm:hover {
+    background: rgba(229, 9, 20, 0.3);
+    color: white;
+}
+
+/* Nav Link */
+.nav-link {
+    @apply text-text-grey;
+}
+.nav-link:hover {
+    color: var(--text-light);
+    transform: scale(1.05);
 }
 
 /* Filter Buttons */
 .filter-btn {
     @apply px-4 py-1.5 rounded-full text-sm font-medium;
-    @apply bg-card-dark text-grey-light border border-muted-gray;
-    transition: all 0.2s ease;
+    @apply bg-card-dark text-text-grey border border-muted-gray;
 }
 .filter-btn:hover {
-    background-color: var(--grey-dark);
+    background-color: var(--muted-gray);
     color: white;
 }
 .filter-btn.active {
-    background-color: var(--blue-bright);
+    background-color: var(--primary-red);
     color: white;
-    border-color: var(--blue-bright);
+    border-color: var(--primary-red);
 }
 
 /* ========================================
@@ -138,7 +161,7 @@ select.form-input option {
   height: 50px;
   border-radius: 50%;
   border: 4px solid var(--muted-gray);
-  border-top-color: var(--blue-bright);
+  border-top-color: var(--primary-red);
   animation: spin 1s ease-in-out infinite;
 }
 @keyframes spin {
@@ -149,19 +172,16 @@ select.form-input option {
   MISC
 ========================================
 */
-/* Custom class for truncating text to 3 lines */
 .line-clamp-3 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
 }
-
-/* Hide scrollbar for a cleaner look in the modal */
 .modal-content::-webkit-scrollbar { display: none; }
 .modal-content {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* Star Rating */
@@ -175,7 +195,7 @@ select.form-input option {
   display: none;
 }
 .star-rating label {
-  color: var(--grey-dark);
+  color: var(--muted-gray); /* Unselected star */
   cursor: pointer;
   padding: 0 0.125em;
   transition: color 0.2s;
@@ -183,12 +203,20 @@ select.form-input option {
 .star-rating input:checked ~ label,
 .star-rating label:hover,
 .star-rating label:hover ~ label {
-  color: var(--gold);
+  color: var(--warning); /* Hover/selected star */
 }
 .star-rating input:checked + label:hover,
 .star-rating input:checked ~ label:hover,
 .star-rating label:hover ~ input:checked ~ label,
 .star-rating input:checked ~ label:hover ~ label {
-  color: var(--gold);
+  color: var(--warning);
+}
+
+/* Custom text colors for JS */
+.text-primary-red {
+    color: var(--primary-red);
+}
+.text-warning {
+    color: var(--warning);
 }
 
