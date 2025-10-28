@@ -100,7 +100,6 @@ const toast = document.getElementById('toast-notification');
 const showToast = (message, isError = false) => {
     toast.textContent = message;
     toast.classList.remove('hidden');
-    // --- CSS CLASS CHANGE ---
     toast.classList.toggle('bg-danger', isError);
     toast.classList.toggle('bg-success', !isError);
     
@@ -119,7 +118,7 @@ const navigateTo = (page) => {
     if (page === 'home') {
         homePage.classList.remove('hidden');
         // Refresh services grid with current filter
-        const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+        const activeFilter = document.querySelector('.btn-filter.active').dataset.filter;
         filterServices(activeFilter);
     } else if (page === 'profile') {
         profilePage.classList.remove('hidden');
@@ -129,8 +128,10 @@ const navigateTo = (page) => {
 navHomeBtn.addEventListener('click', () => navigateTo('home'));
 navProfileBtn.addEventListener('click', () => {
     // When "My Profile" is clicked, load the current user's profile
-    loadProfilePage(auth.currentUser.uid);
-    navigateTo('profile');
+    if (auth.currentUser) {
+        loadProfilePage(auth.currentUser.uid);
+        navigateTo('profile');
+    }
 });
 
 // =======================================================
@@ -156,7 +157,7 @@ onAuthStateChanged(auth, async (user) => {
                 uid: user.uid,
                 name: user.displayName || 'New User',
                 email: user.email,
-                photoURL: user.photoURL || `https://placehold.co/100x100/101958/B8FDF0?text=${user.displayName ? user.displayName[0] : 'U'}`,
+                photoURL: user.photoURL || `https://placehold.co/100x100/0e1224/9fb1d9?text=${user.displayName ? user.displayName[0] : 'U'}`,
                 description: "Welcome to my profile! I'm new here.",
                 links: {
                     mobile: "",
@@ -269,15 +270,14 @@ const loadProfilePage = async (userId) => {
                     <div class="card-dark rounded-lg p-6 shadow-lg text-center">
                         <img src="${profile.photoURL}" alt="${profile.name}" class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-muted-gray">
                         <h2 class="text-2xl font-bold text-white">${profile.name}</h2>
-                        <p class="text-text-grey">${profile.email}</p>
+                        <p class="text-text-muted">${profile.email}</p>
                         <div class="mt-2">
-                             <!-- CSS CLASS CHANGE -->
                             <span class="text-lg font-bold text-warning">${avgRatingText}</span>
-                            <span class="text-sm text-text-grey ml-1">${ratingCountText}</span>
+                            <span class="text-sm text-text-muted ml-1">${ratingCountText}</span>
                         </div>
                         
                         <div class="mt-4 text-left space-y-2">
-                            <h4 class="text-sm font-semibold text-text-grey uppercase">Links</h4>
+                            <h4 class="text-sm font-semibold text-text-muted uppercase">Links</h4>
                             <p class="text-sm"><i data-lucide="smartphone" class="inline w-4 h-4 mr-2"></i> ${profile.links.mobile || 'Not set'}</p>
                             <p class="text-sm"><i data-lucide="linkedin" class="inline w-4 h-4 mr-2"></i> ${profile.links.linkedin || 'Not set'}</p>
                             <p class="text-sm"><i data-lucide="github" class="inline w-4 h-4 mr-2"></i> ${profile.links.github || 'Not set'}</p>
@@ -290,7 +290,7 @@ const loadProfilePage = async (userId) => {
                     <div class="card-dark rounded-lg p-6 shadow-lg">
                         <h3 class="text-xl font-bold text-white mb-4">Site Dashboard</h3>
                         <div class="space-y-3" id="dashboard-content">
-                            <p class="text-text-grey">Loading stats...</p>
+                            <p class="text-text-muted">Loading stats...</p>
                         </div>
                     </div>` : ''}
                 </div>
@@ -301,34 +301,40 @@ const loadProfilePage = async (userId) => {
                     <div class="card-dark rounded-lg p-6 shadow-lg">
                         <div class="flex justify-between items-center mb-2">
                             <h3 class="text-xl font-bold text-white">About Me</h3>
-                            ${isCurrentUser ? `<button id="edit-profile-btn" class="btn-secondary-sm">Edit</button>` : ''}
+                            ${isCurrentUser ? `<button id="edit-profile-btn" class="btn btn-outline">
+                                                    <i data-lucide="edit-2" class="btn-icon"></i>Edit
+                                                </button>` : ''}
                         </div>
-                        <p id="profile-description" class="text-text-grey">${profile.description.replace(/\n/g, '<br>')}</p>
+                        <p id="profile-description" class="text-text-muted">${profile.description.replace(/\n/g, '<br>')}</p>
                         <!-- Edit Form (Hidden) -->
                         <form id="profile-edit-form" class="hidden space-y-4 mt-4">
                             <div>
-                                <label class="block text-sm font-medium text-text-grey">Description</label>
+                                <label class="block text-sm font-medium text-text-muted">Description</label>
                                 <textarea id="edit-description" class="form-input" rows="4">${profile.description}</textarea>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-text-grey">Mobile</label>
+                                <label class="block text-sm font-medium text-text-muted">Mobile</label>
                                 <input type="text" id="edit-mobile" class="form-input" value="${profile.links.mobile}">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-text-grey">LinkedIn Username</label>
+                                <label class="block text-sm font-medium text-text-muted">LinkedIn Username</label>
                                 <input type="text" id="edit-linkedin" class="form-input" value="${profile.links.linkedin}">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-text-grey">GitHub Username</label>
+                                <label class="block text-sm font-medium text-text-muted">GitHub Username</label>
                                 <input type="text" id="edit-github" class="form-input" value="${profile.links.github}">
                             </div>
                              <div>
-                                <label class="block text-sm font-medium text-text-grey">Instagram Username</label>
+                                <label class="block text-sm font-medium text-text-muted">Instagram Username</label>
                                 <input type="text" id="edit-instagram" class="form-input" value="${profile.links.instagram}">
                             </div>
                             <div class="flex space-x-2">
-                                <button type="submit" id="save-profile-btn" class="btn-primary">Save</button>
-                                <button type="button" id="cancel-edit-btn" class="btn-secondary-sm">Cancel</button>
+                                <button type="submit" id="save-profile-btn" class="btn btn-primary">
+                                    <i data-lucide="check" class="btn-icon"></i>Save
+                                </button>
+                                <button type="button" id="cancel-edit-btn" class="btn btn-outline">
+                                    <i data-lucide="x" class="btn-icon"></i>Cancel
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -346,10 +352,12 @@ const loadProfilePage = async (userId) => {
                                 <input type="radio" id="1-star" name="rating" value="1" ${existingRating?.rating == 1 ? 'checked' : ''} /><label for="1-star">★</label>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-text-grey">Your Comment</label>
+                                <label class="block text-sm font-medium text-text-muted">Your Comment</label>
                                 <textarea id="rating-comment" class="form-input" rows="3" placeholder="Share your experience...">${existingRating?.comment || ''}</textarea>
                             </div>
-                            <button type="submit" class="btn-primary mt-4">Submit Rating</button>
+                            <button type="submit" class="btn btn-primary mt-4">
+                                <i data-lucide="star" class="btn-icon"></i>Submit Rating
+                            </button>
                         </form>
                     </div>` : ''}
                     
@@ -357,15 +365,14 @@ const loadProfilePage = async (userId) => {
                     <div class="card-dark rounded-lg p-6 shadow-lg">
                         <h3 class="text-xl font-bold text-white mb-4">What people are saying</h3>
                         <div id="ratings-list" class="space-y-4 max-h-64 overflow-y-auto">
-                            ${profile.ratings.length === 0 ? '<p class="text-text-grey">No ratings yet.</p>' :
+                            ${profile.ratings.length === 0 ? '<p class="text-text-muted">No ratings yet.</p>' :
                                 profile.ratings.map(r => `
                                     <div class="border-b border-muted-gray pb-2">
                                         <div class="flex justify-between items-center">
                                             <span class="font-semibold text-white">${r.raterName || 'Anonymous'}</span>
-                                            <!-- CSS CLASS CHANGE -->
                                             <span class="text-warning">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
                                         </div>
-                                        <p class="text-sm text-text-grey mt-1">${r.comment}</p>
+                                        <p class="text-sm text-text-muted mt-1">${r.comment}</p>
                                     </div>
                                 `).join('')
                             }
@@ -534,10 +541,10 @@ const updateDashboard = async () => {
             <div class="flex justify-between text-white"><span>Total Users:</span> <span class="font-bold">${totalUsers}</span></div>
             <div class="flex justify-between text-white"><span>Total Freelancers:</span> <span class="font-bold">${totalFreelancers}</span></div>
             <hr class="border-muted-gray my-2">
-            <h4 class="text-sm font-semibold text-text-grey uppercase mb-2">Services Posted</h4>
+            <h4 class="text-sm font-semibold text-text-muted uppercase mb-2">Services Posted</h4>
             ${Object.entries(domainCounts).map(([domain, count]) => `
                 <div class="flex justify-between text-sm text-text-light"><span>${domain}:</span> <span class="font-bold">${count}</span></div>
-            `).join('') || '<p class="text-sm text-text-grey">No services posted yet.</p>'}
+            `).join('') || '<p class="text-sm text-text-muted">No services posted yet.</p>'}
         `;
 
     } catch (error) {
@@ -555,7 +562,7 @@ const renderService = (doc) => {
     const data = doc.data();
     const card = document.createElement('div');
     card.dataset.id = doc.id; 
-    card.className = 'card-dark rounded-lg shadow-lg overflow-hidden service-card'; // Added service-card for hover
+    card.className = 'card-dark rounded-lg shadow-lg overflow-hidden service-card';
     card.dataset.domain = data.domain; // For filtering
     
     const timestamp = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
@@ -564,22 +571,27 @@ const renderService = (doc) => {
     card.innerHTML = `
         <div class="p-6">
             <div class="flex items-start justify-between">
-                 <span class="inline-block bg-muted-gray/50 text-text-grey text-xs font-semibold px-2.5 py-0.5 rounded-full">${data.domain}</span>
-                 <span class="text-xs text-text-grey">${timestamp.toLocaleDateString()}</span>
+                 <span class="inline-block bg-muted-gray/50 text-text-muted text-xs font-semibold px-2.5 py-0.5 rounded-full">${data.domain}</span>
+                 <span class="text-xs text-text-muted">${timestamp.toLocaleDateString()}</span>
             </div>
-            <h3 class="text-lg font-bold mt-4 text-white">${data.title}</h3>
-            <p class="mt-2 text-text-grey text-sm line-clamp-3">${data.description}</p>
+            <h3 class_B"text-lg font-bold mt-4 text-white">${data.title}</h3>
+            <p class="mt-2 text-text-muted text-sm line-clamp-3">${data.description}</p>
             <div class="mt-6 pt-4 border-t border-muted-gray flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-white">${data.userName || "Freelancer"}</p>
-                    <p class="text-xs text-text-grey">${data.userEmail}</p>
+                    <p class="text-xs text-text-muted">${data.userEmail}</p>
                 </div>
                 <div class="flex space-x-2">
-                    <button class="view-profile-btn btn-secondary-sm" data-user-id="${data.userId}">Profile</button>
+                    <button class="view-profile-btn btn btn-outline" data-user-id="${data.userId}">
+                        <i data-lucide="user" class="btn-icon"></i>Profile
+                    </button>
                     ${isOwner 
-                        // --- CSS CLASS CHANGE ---
-                        ? `<button class="delete-btn btn-danger-sm" data-doc-id="${doc.id}">Delete</button>`
-                        : `<a href="mailto:${data.userEmail}?subject=Inquiry about your service: ${data.title}" class="btn-primary-sm">Connect</a>`
+                        ? `<button class="delete-btn btn btn-danger-sm" data-doc-id="${doc.id}">
+                                <i data-lucide="trash-2" class="btn-icon"></i>Delete
+                           </button>`
+                        : `<a href="mailto:${data.userEmail}?subject=Inquiry about your service: ${data.title}" class="btn btn-primary-sm">
+                                <i data-lucide="mail" class="btn-icon"></i>Connect
+                           </a>`
                     }
                 </div>
             </div>
@@ -611,7 +623,7 @@ const fetchAndDisplayServices = () => {
         } else {
             noServicesMsg.classList.add('hidden');
             // Re-apply current filter
-             const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+             const activeFilter = document.querySelector('.btn-filter.active').dataset.filter;
              filterServices(activeFilter);
         }
     }, (error) => {
@@ -715,9 +727,9 @@ const filterServices = (filterValue) => {
 }
 
 filterContainer.addEventListener('click', (e) => {
-    if (e.target.classList.contains('filter-btn')) {
+    if (e.target.classList.contains('btn-filter')) {
         // Update active button style
-        filterContainer.querySelectorAll('.filter-btn').forEach(btn => {
+        filterContainer.querySelectorAll('.btn-filter').forEach(btn => {
             btn.classList.remove('active');
         });
         e.target.classList.add('active');
