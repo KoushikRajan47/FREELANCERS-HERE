@@ -482,7 +482,7 @@ const addRatingFormListener = (profileUserId) => {
             raterName,
             rating: parseInt(rating),
             comment,
-            createdAt: serverTimestamp()
+            createdAt: new Date() // Replaced serverTimestamp() with new Date()
         };
 
         try {
@@ -739,4 +739,5 @@ filterContainer.addEventListener('click', (e) => {
         filterServices(filterValue);
     }
 });
+
 
