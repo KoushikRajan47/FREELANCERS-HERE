@@ -574,7 +574,7 @@ const renderService = (doc) => {
                  <span class="inline-block bg-muted-gray/50 text-text-muted text-xs font-semibold px-2.5 py-0.5 rounded-full">${data.domain}</span>
                  <span class="text-xs text-text-muted">${timestamp.toLocaleDateString()}</span>
             </div>
-            <h3 class_B"text-lg font-bold mt-4 text-white">${data.title}</h3>
+            <h3 class="text-lg font-bold mt-4 text-white">${data.title}</h3>
             <p class="mt-2 text-text-muted text-sm line-clamp-3">${data.description}</p>
             <div class="mt-6 pt-4 border-t border-muted-gray flex items-center justify-between">
                 <div>
