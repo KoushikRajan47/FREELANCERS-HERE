@@ -126,7 +126,7 @@ const navigateTo = (page) => {
 };
 
 navHomeBtn.addEventListener('click', () => navigateTo('home'));
-navProfileBtn.addEventListener('click', ()_ => {
+navProfileBtn.addEventListener('click', () => {
     // When "My Profile" is clicked, load the current user's profile
     loadProfilePage(auth.currentUser.uid);
     navigateTo('profile');
