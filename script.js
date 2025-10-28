@@ -100,8 +100,9 @@ const toast = document.getElementById('toast-notification');
 const showToast = (message, isError = false) => {
     toast.textContent = message;
     toast.classList.remove('hidden');
-    toast.classList.toggle('bg-red', isError);
-    toast.classList.toggle('bg-green', !isError);
+    // --- CSS CLASS CHANGE ---
+    toast.classList.toggle('bg-danger', isError);
+    toast.classList.toggle('bg-success', !isError);
     
     setTimeout(() => {
         toast.classList.add('hidden');
@@ -246,7 +247,7 @@ const loadProfilePage = async (userId) => {
         const userDocSnap = await getDoc(userDocRef);
 
         if (!userDocSnap.exists()) {
-            profilePage.innerHTML = `<p class="text-center text-red">Error: User profile not found.</p>`;
+            profilePage.innerHTML = `<p class="text-center text-primary-red">Error: User profile not found.</p>`;
             return;
         }
 
@@ -266,16 +267,17 @@ const loadProfilePage = async (userId) => {
                 <!-- Left Column: Profile Card -->
                 <div class="lg:col-span-1 space-y-6">
                     <div class="card-dark rounded-lg p-6 shadow-lg text-center">
-                        <img src="${profile.photoURL}" alt="${profile.name}" class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-blue-bright/50">
+                        <img src="${profile.photoURL}" alt="${profile.name}" class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-muted-gray">
                         <h2 class="text-2xl font-bold text-white">${profile.name}</h2>
-                        <p class="text-grey-light">${profile.email}</p>
+                        <p class="text-text-grey">${profile.email}</p>
                         <div class="mt-2">
-                            <span class="text-lg font-bold text-gold">${avgRatingText}</span>
-                            <span class="text-sm text-grey-light ml-1">${ratingCountText}</span>
+                             <!-- CSS CLASS CHANGE -->
+                            <span class="text-lg font-bold text-warning">${avgRatingText}</span>
+                            <span class="text-sm text-text-grey ml-1">${ratingCountText}</span>
                         </div>
                         
                         <div class="mt-4 text-left space-y-2">
-                            <h4 class="text-sm font-semibold text-sky uppercase">Links</h4>
+                            <h4 class="text-sm font-semibold text-text-grey uppercase">Links</h4>
                             <p class="text-sm"><i data-lucide="smartphone" class="inline w-4 h-4 mr-2"></i> ${profile.links.mobile || 'Not set'}</p>
                             <p class="text-sm"><i data-lucide="linkedin" class="inline w-4 h-4 mr-2"></i> ${profile.links.linkedin || 'Not set'}</p>
                             <p class="text-sm"><i data-lucide="github" class="inline w-4 h-4 mr-2"></i> ${profile.links.github || 'Not set'}</p>
@@ -288,7 +290,7 @@ const loadProfilePage = async (userId) => {
                     <div class="card-dark rounded-lg p-6 shadow-lg">
                         <h3 class="text-xl font-bold text-white mb-4">Site Dashboard</h3>
                         <div class="space-y-3" id="dashboard-content">
-                            <p class="text-grey-light">Loading stats...</p>
+                            <p class="text-text-grey">Loading stats...</p>
                         </div>
                     </div>` : ''}
                 </div>
@@ -299,29 +301,29 @@ const loadProfilePage = async (userId) => {
                     <div class="card-dark rounded-lg p-6 shadow-lg">
                         <div class="flex justify-between items-center mb-2">
                             <h3 class="text-xl font-bold text-white">About Me</h3>
-                            ${isCurrentUser ? `<button id="edit-profile-btn" class="btn-secondary-sm !py-1 !px-3">Edit</button>` : ''}
+                            ${isCurrentUser ? `<button id="edit-profile-btn" class="btn-secondary-sm">Edit</button>` : ''}
                         </div>
-                        <p id="profile-description" class="text-grey-light">${profile.description.replace(/\n/g, '<br>')}</p>
+                        <p id="profile-description" class="text-text-grey">${profile.description.replace(/\n/g, '<br>')}</p>
                         <!-- Edit Form (Hidden) -->
                         <form id="profile-edit-form" class="hidden space-y-4 mt-4">
                             <div>
-                                <label class="block text-sm font-medium text-grey">Description</label>
+                                <label class="block text-sm font-medium text-text-grey">Description</label>
                                 <textarea id="edit-description" class="form-input" rows="4">${profile.description}</textarea>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-grey">Mobile</label>
+                                <label class="block text-sm font-medium text-text-grey">Mobile</label>
                                 <input type="text" id="edit-mobile" class="form-input" value="${profile.links.mobile}">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-grey">LinkedIn Username</label>
+                                <label class="block text-sm font-medium text-text-grey">LinkedIn Username</label>
                                 <input type="text" id="edit-linkedin" class="form-input" value="${profile.links.linkedin}">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-grey">GitHub Username</label>
+                                <label class="block text-sm font-medium text-text-grey">GitHub Username</label>
                                 <input type="text" id="edit-github" class="form-input" value="${profile.links.github}">
                             </div>
                              <div>
-                                <label class="block text-sm font-medium text-grey">Instagram Username</label>
+                                <label class="block text-sm font-medium text-text-grey">Instagram Username</label>
                                 <input type="text" id="edit-instagram" class="form-input" value="${profile.links.instagram}">
                             </div>
                             <div class="flex space-x-2">
@@ -344,7 +346,7 @@ const loadProfilePage = async (userId) => {
                                 <input type="radio" id="1-star" name="rating" value="1" ${existingRating?.rating == 1 ? 'checked' : ''} /><label for="1-star">★</label>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-grey">Your Comment</label>
+                                <label class="block text-sm font-medium text-text-grey">Your Comment</label>
                                 <textarea id="rating-comment" class="form-input" rows="3" placeholder="Share your experience...">${existingRating?.comment || ''}</textarea>
                             </div>
                             <button type="submit" class="btn-primary mt-4">Submit Rating</button>
@@ -355,14 +357,15 @@ const loadProfilePage = async (userId) => {
                     <div class="card-dark rounded-lg p-6 shadow-lg">
                         <h3 class="text-xl font-bold text-white mb-4">What people are saying</h3>
                         <div id="ratings-list" class="space-y-4 max-h-64 overflow-y-auto">
-                            ${profile.ratings.length === 0 ? '<p class="text-grey">No ratings yet.</p>' :
+                            ${profile.ratings.length === 0 ? '<p class="text-text-grey">No ratings yet.</p>' :
                                 profile.ratings.map(r => `
                                     <div class="border-b border-muted-gray pb-2">
                                         <div class="flex justify-between items-center">
                                             <span class="font-semibold text-white">${r.raterName || 'Anonymous'}</span>
-                                            <span class="text-gold">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
+                                            <!-- CSS CLASS CHANGE -->
+                                            <span class="text-warning">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
                                         </div>
-                                        <p class="text-sm text-grey-light mt-1">${r.comment}</p>
+                                        <p class="text-sm text-text-grey mt-1">${r.comment}</p>
                                     </div>
                                 `).join('')
                             }
@@ -372,7 +375,11 @@ const loadProfilePage = async (userId) => {
             </div>
         `;
 
-        lucide.createIcons(); // Re-render icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        } else {
+            console.error("Lucide is not loaded, cannot create icons.");
+        }
         
         // Add event listeners for this dynamically generated content
         if (isCurrentUser) {
@@ -384,7 +391,7 @@ const loadProfilePage = async (userId) => {
 
     } catch (error) {
         console.error("Error loading profile:", error);
-        profilePage.innerHTML = `<p class="text-center text-red">Error: Could not load profile.</p>`;
+        profilePage.innerHTML = `<p class="text-center text-primary-red">Error: Could not load profile.</p>`;
     }
 };
 
@@ -394,6 +401,9 @@ const addProfileEditListeners = () => {
     const cancelBtn = document.getElementById('cancel-edit-btn');
     const editForm = document.getElementById('profile-edit-form');
     const descriptionP = document.getElementById('profile-description');
+
+    // Handle null elements if profile failed to render
+    if (!editBtn || !cancelBtn || !editForm || !descriptionP) return;
 
     editBtn.addEventListener('click', () => {
         editForm.classList.remove('hidden');
@@ -442,6 +452,10 @@ const addProfileEditListeners = () => {
 // --- Rating Form Listener ---
 const addRatingFormListener = (profileUserId) => {
     const ratingForm = document.getElementById('rating-form');
+    
+    // Handle null element
+    if (!ratingForm) return;
+
     ratingForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -495,6 +509,10 @@ const addRatingFormListener = (profileUserId) => {
 // --- Dashboard Logic ---
 const updateDashboard = async () => {
     const dashboardContent = document.getElementById('dashboard-content');
+    
+    // Handle null element
+    if (!dashboardContent) return;
+
     try {
         // 1. Total Users
         const usersSnapshot = await getCountFromServer(usersCollection);
@@ -516,15 +534,15 @@ const updateDashboard = async () => {
             <div class="flex justify-between text-white"><span>Total Users:</span> <span class="font-bold">${totalUsers}</span></div>
             <div class="flex justify-between text-white"><span>Total Freelancers:</span> <span class="font-bold">${totalFreelancers}</span></div>
             <hr class="border-muted-gray my-2">
-            <h4 class="text-sm font-semibold text-sky uppercase mb-2">Services Posted</h4>
+            <h4 class="text-sm font-semibold text-text-grey uppercase mb-2">Services Posted</h4>
             ${Object.entries(domainCounts).map(([domain, count]) => `
-                <div class="flex justify-between text-sm text-grey-light"><span>${domain}:</span> <span class="font-bold">${count}</span></div>
-            `).join('') || '<p class="text-sm text-grey-light">No services posted yet.</p>'}
+                <div class="flex justify-between text-sm text-text-light"><span>${domain}:</span> <span class="font-bold">${count}</span></div>
+            `).join('') || '<p class="text-sm text-text-grey">No services posted yet.</p>'}
         `;
 
     } catch (error) {
         console.error("Error updating dashboard:", error);
-        dashboardContent.innerHTML = `<p class="text-red">Could not load stats.</p>`;
+        dashboardContent.innerHTML = `<p class="text-primary-red">Could not load stats.</p>`;
     }
 };
 
@@ -537,7 +555,7 @@ const renderService = (doc) => {
     const data = doc.data();
     const card = document.createElement('div');
     card.dataset.id = doc.id; 
-    card.className = 'card-dark rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 service-card';
+    card.className = 'card-dark rounded-lg shadow-lg overflow-hidden service-card'; // Added service-card for hover
     card.dataset.domain = data.domain; // For filtering
     
     const timestamp = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
@@ -546,21 +564,22 @@ const renderService = (doc) => {
     card.innerHTML = `
         <div class="p-6">
             <div class="flex items-start justify-between">
-                 <span class="inline-block bg-sky/20 text-sky text-xs font-semibold px-2.5 py-0.5 rounded-full">${data.domain}</span>
-                 <span class="text-xs text-grey">${timestamp.toLocaleDateString()}</span>
+                 <span class="inline-block bg-muted-gray/50 text-text-grey text-xs font-semibold px-2.5 py-0.5 rounded-full">${data.domain}</span>
+                 <span class="text-xs text-text-grey">${timestamp.toLocaleDateString()}</span>
             </div>
             <h3 class="text-lg font-bold mt-4 text-white">${data.title}</h3>
-            <p class="mt-2 text-grey-light text-sm line-clamp-3">${data.description}</p>
+            <p class="mt-2 text-text-grey text-sm line-clamp-3">${data.description}</p>
             <div class="mt-6 pt-4 border-t border-muted-gray flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-white">${data.userName || "Freelancer"}</p>
-                    <p class="text-xs text-grey-light">${data.userEmail}</p>
+                    <p class="text-xs text-text-grey">${data.userEmail}</p>
                 </div>
                 <div class="flex space-x-2">
-                    <button class="view-profile-btn btn-secondary-sm !py-1 !px-3" data-user-id="${data.userId}">Profile</button>
+                    <button class="view-profile-btn btn-secondary-sm" data-user-id="${data.userId}">Profile</button>
                     ${isOwner 
-                        ? `<button class="delete-btn bg-red/20 text-red hover:bg-red/40 transition !py-1 !px-3 rounded-md text-sm font-semibold" data-doc-id="${doc.id}">Delete</button>`
-                        : `<a href="mailto:${data.userEmail}?subject=Inquiry about your service: ${data.title}" class="btn-primary-sm !py-1 !px-3">Connect</a>`
+                        // --- CSS CLASS CHANGE ---
+                        ? `<button class="delete-btn btn-danger-sm" data-doc-id="${doc.id}">Delete</button>`
+                        : `<a href="mailto:${data.userEmail}?subject=Inquiry about your service: ${data.title}" class="btn-primary-sm">Connect</a>`
                     }
                 </div>
             </div>
@@ -597,15 +616,16 @@ const fetchAndDisplayServices = () => {
         }
     }, (error) => {
         console.error("Error fetching services: ", error);
-        servicesGrid.innerHTML = `<p class="text-red col-span-full text-center">Error: ${error.message}</p>`;
+        servicesGrid.innerHTML = `<p class="text-primary-red col-span-full text-center">Error: ${error.message}</p>`;
     });
 }
 
 // --- Service Card Button Listeners (Delete & View Profile) ---
 servicesGrid.addEventListener('click', async (e) => {
     // Handle Delete
-    if (e.target.classList.contains('delete-btn')) {
-        const docId = e.target.dataset.docId;
+    const deleteButton = e.target.closest('.delete-btn');
+    if (deleteButton) {
+        const docId = deleteButton.dataset.docId;
         if (confirm("Are you sure you want to remove this service?")) {
             try {
                 await deleteDoc(doc(db, "services", docId));
@@ -619,8 +639,9 @@ servicesGrid.addEventListener('click', async (e) => {
     }
     
     // Handle View Profile
-    if (e.target.classList.contains('view-profile-btn')) {
-        const userId = e.target.dataset.userId;
+    const profileButton = e.target.closest('.view-profile-btn');
+    if (profileButton) {
+        const userId = profileButton.dataset.userId;
         loadProfilePage(userId);
         navigateTo('profile');
     }
@@ -684,8 +705,13 @@ const filterServices = (filterValue) => {
         noServicesMsg.classList.add('hidden'); // Show grid, but renderService won't run
         noServicesMsg.classList.remove('hidden'); // Show no services message
     }
+    
     // Re-render icons after filtering
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    } else {
+        console.error("Lucide is not loaded, cannot create icons.");
+    }
 }
 
 filterContainer.addEventListener('click', (e) => {
