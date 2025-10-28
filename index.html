@@ -16,8 +16,8 @@
     <!-- 3. Our Custom CSS File -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- 4. Icon Library (Lucide) -->
-    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide.js"></script>
+    <!-- 4. Icon Library (Lucide) - *** THIS IS THE FIX *** -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body class="bg-dark text-gray-300">
 
@@ -178,10 +178,14 @@
     -->
     <script src="script.js" type="module"></script>
     
-    <!-- Script for Lucide Icons -->
-    <script>
-      lucide.createIcons();
-    </script>
+    <!-- 
+      Script for Lucide Icons
+      - This MUST come AFTER script.js (as a module) to ensure 'lucide' is defined
+      - Or just call it from within the JS module.
+      - We will call `lucide.createIcons()` from within our script.js
+        whenever new content is added.
+    -->
 
 </body>
 </html>
+
