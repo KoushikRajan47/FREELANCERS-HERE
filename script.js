@@ -1,7 +1,7 @@
 // =======================================================
 //  IMPORTS
 // =======================================================
-import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { 
     getAuth, 
     createUserWithEmailAndPassword, 
@@ -17,20 +17,23 @@ import {
     query, 
     onSnapshot, 
     serverTimestamp, 
-    deleteDoc,
-    doc,
-    setDoc, // For creating user profiles
-    getDoc, // For fetching user profiles
-    updateDoc, // For updating profiles and ratings
-    arrayUnion, // For adding ratings
-    arrayRemove, // (Not used here, but good to know)
-    getCountFromServer // For dashboard
+    orderBy, 
+    doc, 
+    setDoc, 
+    getDoc, 
+    deleteDoc, 
+    updateDoc, 
+    arrayUnion, 
+    arrayRemove, 
+    getDocs,
+    where,
+    limit
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // =======================================================
 //  FIREBASE CONFIGURATION
 // =======================================================
-// Using the 'freelancer-here' config from our previous session
+// --- Use the config you provided ---
 const firebaseConfig = {
   apiKey: "AIzaSyCPoBCgSMptHiACr_zjsKRrAVGsGNBWQns",
   authDomain: "freelancer-here.firebaseapp.com",
@@ -46,21 +49,21 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-setLogLevel('debug');
-console.log("Firebase Initialized with Project ID:", firebaseConfig.projectId);
+console.log(`Firebase Initialized with Project ID: ${firebaseConfig.projectId}`);
 
 // =======================================================
 //  FIRESTORE COLLECTIONS
 // =======================================================
-const servicesCollection = collection(db, "services");
-const usersCollection = collection(db, "users");
+const servicesCollection = collection(db, 'services');
+const usersCollection = collection(db, 'users');
 
 // =======================================================
 //  GLOBAL STATE
 // =======================================================
-let currentUserProfile = null; // Caches the logged-in user's profile
-let allServices = []; // Caches all services for filtering
-let unsubscribeServices = null; // To store the services listener
+let currentAuthUser = null; // Holds the auth object for the logged-in user
+let currentUserProfile = null; // Holds the profile data from 'users' collection
+let allServices = []; // Local cache for filtering services
+let currentUnsubscribe = null; // Holds the listener for services to stop it
 
 // =======================================================
 //  DOM ELEMENT REFERENCES
@@ -70,11 +73,18 @@ const authPage = document.getElementById('auth-page');
 const appPage = document.getElementById('app-page');
 const authError = document.getElementById('auth-error');
 
+// --- Auth Tabs ---
+const loginForm = document.getElementById('login-form');
+const signupForm = document.getElementById('signup-form');
+const loginTab = document.getElementById('auth-tab-login');
+const signupTab = document.getElementById('auth-tab-signup');
+
 // --- Pages ---
 const homePage = document.getElementById('home-page');
 const profilePage = document.getElementById('profile-page');
+const allPages = [homePage, profilePage];
 
-// --- Nav ---
+// --- Nav Buttons ---
 const navHomeBtn = document.getElementById('nav-home-btn');
 const navProfileBtn = document.getElementById('nav-profile-btn');
 const logoutBtn = document.getElementById('logout-btn');
@@ -95,14 +105,37 @@ const modalError = document.getElementById('modal-error');
 const toast = document.getElementById('toast-notification');
 
 // =======================================================
+//  AUTH TAB SWITCHING (FIX)
+// =======================================================
+loginTab.addEventListener('click', () => {
+    loginForm.classList.remove('hidden');
+    signupForm.classList.add('hidden');
+    loginTab.classList.add('border-primary-red', 'text-primary-red');
+    loginTab.classList.remove('border-transparent', 'text-text-muted');
+    signupTab.classList.add('border-transparent', 'text-text-muted');
+    signupTab.classList.remove('border-primary-red', 'text-primary-red');
+    authError.textContent = '';
+});
+
+signupTab.addEventListener('click', () => {
+    signupForm.classList.remove('hidden');
+    loginForm.classList.add('hidden');
+    signupTab.classList.add('border-primary-red', 'text-primary-red');
+    signupTab.classList.remove('border-transparent', 'text-text-muted');
+    loginTab.classList.add('border-transparent', 'text-text-muted');
+    loginTab.classList.remove('border-primary-red', 'text-primary-red');
+    authError.textContent = '';
+});
+
+// =======================================================
 //  TOAST NOTIFICATION
 // =======================================================
-const showToast = (message, isError = false) => {
+const showToast = (message, isSuccess = true) => {
     toast.textContent = message;
-    toast.classList.remove('hidden');
-    toast.classList.toggle('bg-danger', isError);
-    toast.classList.toggle('bg-success', !isError);
+    toast.classList.remove('hidden', 'bg-success', 'bg-danger');
+    toast.classList.add(isSuccess ? 'bg-success' : 'bg-danger');
     
+    // Show and then hide after 3 seconds
     setTimeout(() => {
         toast.classList.add('hidden');
     }, 3000);
@@ -111,27 +144,24 @@ const showToast = (message, isError = false) => {
 // =======================================================
 //  PAGE NAVIGATION
 // =======================================================
-const navigateTo = (page) => {
-    homePage.classList.add('hidden');
-    profilePage.classList.add('hidden');
-
-    if (page === 'home') {
-        homePage.classList.remove('hidden');
-        // Refresh services grid with current filter
-        const activeFilter = document.querySelector('.btn-filter.active').dataset.filter;
-        filterServices(activeFilter);
-    } else if (page === 'profile') {
-        profilePage.classList.remove('hidden');
+const navigateTo = (pageId) => {
+    allPages.forEach(page => {
+        if (page.id === pageId) {
+            page.classList.remove('hidden');
+        } else {
+            page.classList.add('hidden');
+        }
+    });
+    // Special case: Profile page needs data, Home page needs to fetch services
+    if (pageId === 'home-page') {
+        filterServices('all'); // Re-filter to 'all' when returning home
     }
 };
 
-navHomeBtn.addEventListener('click', () => navigateTo('home'));
+navHomeBtn.addEventListener('click', () => navigateTo('home-page'));
 navProfileBtn.addEventListener('click', () => {
-    // When "My Profile" is clicked, load the current user's profile
-    if (auth.currentUser) {
-        loadProfilePage(auth.currentUser.uid);
-        navigateTo('profile');
-    }
+    navigateTo('profile-page');
+    loadProfilePage(currentAuthUser.uid); // Load *my* profile
 });
 
 // =======================================================
@@ -139,60 +169,64 @@ navProfileBtn.addEventListener('click', () => {
 // =======================================================
 
 onAuthStateChanged(auth, async (user) => {
-    loader.classList.add('hidden');
+    loader.classList.add('hidden'); // Hide loader once auth state is known
+    
     if (user) {
         // User is logged in
-        console.log("Auth state changed: User signed in:", user.uid);
+        currentAuthUser = user;
+        console.log('Auth state changed: User signed in:', user.uid);
         
-        // --- NEW: Fetch or Create User Profile ---
-        const userDocRef = doc(db, "users", user.uid);
+        // Fetch or create their profile
+        const userDocRef = doc(db, 'users', user.uid);
         const userDocSnap = await getDoc(userDocRef);
 
         if (userDocSnap.exists()) {
             currentUserProfile = userDocSnap.data();
-            console.log("Fetched user profile:", currentUserProfile);
+            console.log('Fetched user profile:', currentUserProfile);
         } else {
-            console.log("No profile found, creating new one...");
-            const newUserProfile = {
+            console.log('No profile found, creating new one...');
+            // Create a new profile
+            const newProfile = {
                 uid: user.uid,
-                name: user.displayName || 'New User',
+                name: user.displayName || document.getElementById('signup-name').value || 'New User',
                 email: user.email,
-                photoURL: user.photoURL || `https://placehold.co/100x100/0e1224/9fb1d9?text=${user.displayName ? user.displayName[0] : 'U'}`,
-                description: "Welcome to my profile! I'm new here.",
-                links: {
-                    mobile: "",
-                    linkedin: "",
-                    github: "",
-                    instagram: ""
-                },
-                ratings: [],
-                avgRating: 0,
+                photoURL: user.photoURL || `https://placehold.co/100x100/0e1224/9fb1d9?text=${user.displayName ? user.displayName.charAt(0) : 'U'}`,
+                description: '',
+                linkedin: '',
+                github: '',
+                ratings: [], // Array to hold rating objects
                 createdAt: serverTimestamp()
             };
-            await setDoc(userDocRef, newUserProfile);
-            currentUserProfile = newUserProfile;
-            console.log("Created new user profile:", currentUserProfile);
+            await setDoc(userDocRef, newProfile);
+            currentUserProfile = newProfile;
+            console.log('Created new user profile:', currentUserProfile);
         }
         
         authPage.classList.add('hidden');
         appPage.classList.remove('hidden');
-        navigateTo('home');
-        fetchAndDisplayServices();
+        navigateTo('home-page'); // Default to home page on login
+        attachServiceListener(); // Start listening for services
         
     } else {
         // User is logged out
-        console.log("Auth state changed: User signed out.");
+        console.log('Auth state changed: User signed out.');
+        currentAuthUser = null;
+        currentUserProfile = null;
+        
         appPage.classList.add('hidden');
         authPage.classList.remove('hidden');
         
-        currentUserProfile = null;
-        servicesGrid.innerHTML = '';
-        if (unsubscribeServices) unsubscribeServices();
+        // Stop listening to services when logged out
+        if (currentUnsubscribe) {
+            currentUnsubscribe();
+            currentUnsubscribe = null;
+        }
     }
+    // Call createIcons *after* the correct page is shown
+    lucide.createIcons();
 });
 
 // --- Handle Sign Up ---
-const signupForm = document.getElementById('signup-form');
 signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('signup-name').value;
@@ -202,19 +236,21 @@ signupForm.addEventListener('submit', async (e) => {
 
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(userCredential.user, { displayName: name });
-        // Set display name in auth, the onAuthStateChanged listener will handle profile creation in Firestore
-        console.log("User signed up:", userCredential.user.uid);
+        // Update auth profile
+        await updateProfile(userCredential.user, { 
+            displayName: name,
+            photoURL: `https://placehold.co/100x100/0e1224/9fb1d9?text=${name.charAt(0)}`
+        });
+        
+        // The onAuthStateChanged listener will handle creating the Firestore profile
         signupForm.reset();
-        // onAuthStateChanged will handle the rest
     } catch (error) {
-        console.error("Signup error:", error);
         authError.textContent = error.message;
+        console.error('Sign up error:', error);
     }
 });
 
 // --- Handle Login ---
-const loginForm = document.getElementById('login-form');
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
@@ -223,11 +259,11 @@ loginForm.addEventListener('submit', async (e) => {
 
     try {
         await signInWithEmailAndPassword(auth, email, password);
-        loginForm.reset();
         // onAuthStateChanged will handle the rest
+        loginForm.reset();
     } catch (error) {
-        console.error("Login error:", error);
-        authError.textContent = error.message;
+        authError.textContent = "Error: Invalid email or password.";
+        console.error('Login error:', error);
     }
 });
 
@@ -239,317 +275,325 @@ logoutBtn.addEventListener('click', () => {
 // =======================================================
 //  PROFILE PAGE LOGIC
 // =======================================================
+
 const loadProfilePage = async (userId) => {
-    console.log("Loading profile for user:", userId);
-    profilePage.innerHTML = `<div class="loader mx-auto mt-10"></div>`; // Show loader
+    console.log(`Loading profile for user: ${userId}`);
+    profilePage.innerHTML = `<div class="loader mx-auto"></div>`; // Show loader
+
+    const userDocRef = doc(db, 'users', userId);
+    const userDocSnap = await getDoc(userDocRef);
+
+    if (!userDocSnap.exists()) {
+        console.error('Error loading profile: User not found');
+        profilePage.innerHTML = `<p class="text-center text-primary-red">Error: Could not load profile.</p>`;
+        return;
+    }
     
-    try {
-        const userDocRef = doc(db, "users", userId);
-        const userDocSnap = await getDoc(userDocRef);
+    const profileData = userDocSnap.data();
+    const isMyProfile = currentAuthUser.uid === userId;
+    
+    // Calculate average rating
+    let avgRating = 0;
+    let totalRatings = profileData.ratings.length;
+    if (totalRatings > 0) {
+        const sum = profileData.ratings.reduce((acc, r) => acc + r.rating, 0);
+        avgRating = (sum / totalRatings).toFixed(1);
+    }
 
-        if (!userDocSnap.exists()) {
-            profilePage.innerHTML = `<p class="text-center text-primary-red">Error: User profile not found.</p>`;
-            return;
-        }
-
-        const profile = userDocSnap.data();
-        const isCurrentUser = auth.currentUser.uid === userId;
+    // --- Dashboard Data Fetch ---
+    let dashboardHtml = '';
+    if (isMyProfile) {
+        const totalUsersSnap = await getDocs(query(usersCollection, limit(100))); // Cap at 100 for performance
+        const servicesSnap = await getDocs(query(servicesCollection, limit(500))); // Cap at 500
         
-        // Calculate average rating
-        const numRatings = profile.ratings.length;
-        const avgRatingText = numRatings > 0 ? `${profile.avgRating.toFixed(1)} ★` : 'No Ratings';
-        const ratingCountText = numRatings === 1 ? `(1 rating)` : `(${numRatings} ratings)`;
-
-        // Check if current user has already rated this person
-        const existingRating = profile.ratings.find(r => r.raterId === auth.currentUser.uid);
+        const totalUsers = totalUsersSnap.size;
+        const serviceData = servicesSnap.docs.map(doc => doc.data());
         
-        profilePage.innerHTML = `
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Left Column: Profile Card -->
-                <div class="lg:col-span-1 space-y-6">
-                    <div class="card-dark rounded-lg p-6 shadow-lg text-center">
-                        <img src="${profile.photoURL}" alt="${profile.name}" class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-muted-gray">
-                        <h2 class="text-2xl font-bold text-white">${profile.name}</h2>
-                        <p class="text-text-muted">${profile.email}</p>
-                        <div class="mt-2">
-                            <span class="text-lg font-bold text-warning">${avgRatingText}</span>
-                            <span class="text-sm text-text-muted ml-1">${ratingCountText}</span>
+        const totalFreelancers = new Set(serviceData.map(s => s.userId)).size;
+        
+        const categoryCounts = {
+            'Coding': 0,
+            'Content Writing': 0,
+            'Project Making': 0,
+            'Video Editing': 0,
+            'Photography': 0,
+            'Presentations': 0
+        };
+        
+        serviceData.forEach(s => {
+            if (categoryCounts.hasOwnProperty(s.domain)) {
+                categoryCounts[s.domain]++;
+            }
+        });
+
+        dashboardHtml = `
+            <div class="card-dark p-6 rounded-lg mb-8">
+                <h3 class="text-xl font-bold text-primary-red mb-6">Dashboard</h3>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Stat Card: Total Users -->
+                    <div class="bg-dark p-4 rounded-lg border border-muted-gray text-center">
+                        <p class="text-3xl font-bold">${totalUsers}</p>
+                        <p class="text-sm text-text-muted">Total Users</p>
+                    </div>
+                    <!-- Stat Card: Total Freelancers -->
+                    <div class="bg-dark p-4 rounded-lg border border-muted-gray text-center">
+                        <p class="text-3xl font-bold">${totalFreelancers}</p>
+                        <p class="text-sm text-text-muted">Active Freelancers</p>
+                    </div>
+                    <!-- Stat Card: Total Services -->
+                    <div class="bg-dark p-4 rounded-lg border border-muted-gray text-center">
+                        <p class="text-3xl font-bold">${serviceData.length}</p>
+                        <p class="text-sm text-text-muted">Total Services</p>
+                    </div>
+                    <!-- Stat Card: My Services -->
+                    <div class="bg-dark p-4 rounded-lg border border-muted-gray text-center">
+                        <p class="text-3xl font-bold">${serviceData.filter(s => s.userId === currentAuthUser.uid).length}</p>
+                        <p class="text-sm text-text-muted">My Services</p>
+                    </div>
+                </div>
+                <h4 class="text-lg font-semibold text-white mt-8 mb-4">Services by Category</h4>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    ${Object.entries(categoryCounts).map(([domain, count]) => `
+                        <div class="bg-dark p-3 rounded-lg border border-muted-gray">
+                            <span class="text-xl font-bold">${count}</span>
+                            <p class="text-xs text-text-muted truncate">${domain}</p>
                         </div>
-                        
-                        <div class="mt-4 text-left space-y-2">
-                            <h4 class="text-sm font-semibold text-text-muted uppercase">Links</h4>
-                            <p class="text-sm"><i data-lucide="smartphone" class="inline w-4 h-4 mr-2"></i> ${profile.links.mobile || 'Not set'}</p>
-                            <p class="text-sm"><i data-lucide="linkedin" class="inline w-4 h-4 mr-2"></i> ${profile.links.linkedin || 'Not set'}</p>
-                            <p class="text-sm"><i data-lucide="github" class="inline w-4 h-4 mr-2"></i> ${profile.links.github || 'Not set'}</p>
-                            <p class="text-sm"><i data-lucide="instagram" class="inline w-4 h-4 mr-2"></i> ${profile.links.instagram || 'Not set'}</p>
-                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // --- Main Profile HTML ---
+    profilePage.innerHTML = `
+        ${dashboardHtml}
+        
+        <div class="card-dark p-6 rounded-lg">
+            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                <img src="${profileData.photoURL}" alt="${profileData.name}" class="w-32 h-32 rounded-full border-4 border-muted-gray flex-shrink-0">
+                <div class="flex-grow w-full text-center sm:text-left">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center">
+                        <h2 class="text-3xl font-bold text-white">${profileData.name}</h2>
+                        ${isMyProfile ? `
+                            <button id="edit-profile-btn" class="btn btn-outline mt-4 sm:mt-0">
+                                <i data-lucide="edit-2" class="btn-icon"></i>
+                                Edit Profile
+                            </button>
+                        ` : ''}
+                    </div>
+                    <p class="text-lg text-text-muted">${profileData.email}</p>
+                    <div class="flex items-center justify-center sm:justify-start gap-2 my-2">
+                        <i data-lucide="star" class="text-warning w-5 h-5" fill="currentColor"></i>
+                        <span class="text-2xl font-bold text-white">${avgRating}</span>
+                        <span class="text-text-muted">(${totalRatings} ratings)</span>
                     </div>
                     
-                    <!-- Dashboard (Only on own profile) -->
-                    ${isCurrentUser ? `
-                    <div class="card-dark rounded-lg p-6 shadow-lg">
-                        <h3 class="text-xl font-bold text-white mb-4">Site Dashboard</h3>
-                        <div class="space-y-3" id="dashboard-content">
-                            <p class="text-text-muted">Loading stats...</p>
-                        </div>
-                    </div>` : ''}
-                </div>
-
-                <!-- Right Column: Details & Actions -->
-                <div class="lg:col-span-2 space-y-6">
-                    <!-- Description -->
-                    <div class="card-dark rounded-lg p-6 shadow-lg">
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 class="text-xl font-bold text-white">About Me</h3>
-                            ${isCurrentUser ? `<button id="edit-profile-btn" class="btn btn-outline">
-                                                    <i data-lucide="edit-2" class="btn-icon"></i>Edit
-                                                </button>` : ''}
-                        </div>
-                        <p id="profile-description" class="text-text-muted">${profile.description.replace(/\n/g, '<br>')}</p>
-                        <!-- Edit Form (Hidden) -->
-                        <form id="profile-edit-form" class="hidden space-y-4 mt-4">
+                    <!-- Profile Form (for editing) -->
+                    <form id="profile-edit-form" class="${isMyProfile ? '' : 'hidden'}">
+                        <div class="mt-4 space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-text-muted">Description</label>
-                                <textarea id="edit-description" class="form-input" rows="4">${profile.description}</textarea>
+                                <textarea id="profile-desc" class="form-input" rows="3" placeholder="Tell everyone about your skills...">${profileData.description}</textarea>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-text-muted">Mobile</label>
-                                <input type="text" id="edit-mobile" class="form-input" value="${profile.links.mobile}">
+                                <label class="block text-sm font-medium text-text-muted">LinkedIn URL</label>
+                                <input type="url" id="profile-linkedin" class="form-input" placeholder="https://linkedin.com/in/..." value="${profileData.linkedin || ''}">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-text-muted">LinkedIn Username</label>
-                                <input type="text" id="edit-linkedin" class="form-input" value="${profile.links.linkedin}">
+                                <label class="block text-sm font-medium text-text-muted">GitHub URL</label>
+                                <input type="url" id="profile-github" class="form-input" placeholder="https://github.com/..." value="${profileData.github || ''}">
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-text-muted">GitHub Username</label>
-                                <input type="text" id="edit-github" class="form-input" value="${profile.links.github}">
+                            <div id="profile-display" class="${isMyProfile ? 'hidden' : 'block'}">
+                                <!-- This block is just for non-edit mode, but we hide the form instead -->
                             </div>
-                             <div>
-                                <label class="block text-sm font-medium text-text-muted">Instagram Username</label>
-                                <input type="text" id="edit-instagram" class="form-input" value="${profile.links.instagram}">
-                            </div>
-                            <div class="flex space-x-2">
-                                <button type="submit" id="save-profile-btn" class="btn btn-primary">
-                                    <i data-lucide="check" class="btn-icon"></i>Save
+                            <div class_="${isMyProfile ? '' : 'hidden'}">
+                                <button type="submit" id="save-profile-btn" class="btn btn-primary-sm hidden">
+                                    <i data-lucide="save" class="btn-icon"></i>
+                                    Save Changes
                                 </button>
-                                <button type="button" id="cancel-edit-btn" class="btn btn-outline">
-                                    <i data-lucide="x" class="btn-icon"></i>Cancel
-                                </button>
+                                <button type="button" id="cancel-edit-btn" class="btn btn-ghost hidden">Cancel</button>
                             </div>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
                     
-                    <!-- Leave a Rating (Only on others' profiles) -->
-                    ${!isCurrentUser ? `
-                    <div class="card-dark rounded-lg p-6 shadow-lg">
-                        <h3 class="text-xl font-bold text-white mb-4">${existingRating ? 'Update Your Rating' : 'Leave a Rating'}</h3>
-                        <form id="rating-form" data-profile-id="${userId}">
-                            <div class="star-rating mb-4">
-                                <input type="radio" id="5-stars" name="rating" value="5" ${existingRating?.rating == 5 ? 'checked' : ''} /><label for="5-stars">★</label>
-                                <input type="radio" id="4-stars" name="rating" value="4" ${existingRating?.rating == 4 ? 'checked' : ''} /><label for="4-stars">★</label>
-                                <input type="radio" id="3-stars" name="rating" value="3" ${existingRating?.rating == 3 ? 'checked' : ''} /><label for="3-stars">★</label>
-                                <input type="radio" id="2-stars" name="rating" value="2" ${existingRating?.rating == 2 ? 'checked' : ''} /><label for="2-stars">★</label>
-                                <input type="radio" id="1-star" name="rating" value="1" ${existingRating?.rating == 1 ? 'checked' : ''} /><label for="1-star">★</label>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-text-muted">Your Comment</label>
-                                <textarea id="rating-comment" class="form-input" rows="3" placeholder="Share your experience...">${existingRating?.comment || ''}</textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary mt-4">
-                                <i data-lucide="star" class="btn-icon"></i>Submit Rating
-                            </button>
-                        </form>
-                    </div>` : ''}
-                    
-                    <!-- Ratings List -->
-                    <div class="card-dark rounded-lg p-6 shadow-lg">
-                        <h3 class="text-xl font-bold text-white mb-4">What people are saying</h3>
-                        <div id="ratings-list" class="space-y-4 max-h-64 overflow-y-auto">
-                            ${profile.ratings.length === 0 ? '<p class="text-text-muted">No ratings yet.</p>' :
-                                profile.ratings.map(r => `
-                                    <div class="border-b border-muted-gray pb-2">
-                                        <div class="flex justify-between items-center">
-                                            <span class="font-semibold text-white">${r.raterName || 'Anonymous'}</span>
-                                            <span class="text-warning">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
-                                        </div>
-                                        <p class="text-sm text-text-muted mt-1">${r.comment}</p>
-                                    </div>
-                                `).join('')
-                            }
+                    <!-- Profile Display (for viewing) -->
+                    <div id="profile-display-section" class="mt-4 space-y-4 ${isMyProfile ? 'block' : 'block'}">
+                        <p class="text-white">${profileData.description || 'No description provided.'}</p>
+                        <div class="flex flex-wrap gap-4">
+                            ${profileData.linkedin ? `<a href="${profileData.linkedin}" target="_blank" class="btn btn-ghost"><i data-lucide="linkedin" class="btn-icon"></i> LinkedIn</a>` : ''}
+                            ${profileData.github ? `<a href="${profileData.github}" target="_blank" class="btn btn-ghost"><i data-lucide="github" class="btn-icon"></i> GitHub</a>` : ''}
                         </div>
                     </div>
                 </div>
             </div>
-        `;
+        </div>
 
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        } else {
-            console.error("Lucide is not loaded, cannot create icons.");
-        }
-        
-        // Add event listeners for this dynamically generated content
-        if (isCurrentUser) {
-            addProfileEditListeners();
-            updateDashboard(); // Load dashboard stats
-        } else {
-            addRatingFormListener(userId);
-        }
+        <!-- Rating Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            <!-- Leave a Rating Form -->
+            <div id="rating-form-container" class="card-dark p-6 rounded-lg ${isMyProfile ? 'hidden' : ''}">
+                <h3 class="text-xl font-bold text-white mb-4">Leave a Rating</h3>
+                <form id="rating-form">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-text-muted mb-2">Your Rating</label>
+                        <div class="star-rating">
+                            <input type="radio" id="5-stars" name="rating" value="5" /><label for="5-stars">&#9733;</label>
+                            <input type="radio" id="4-stars" name="rating" value="4" /><label for="4-stars">&#9733;</label>
+                            <input type="radio" id="3-stars" name="rating" value="3" /><label for="3-stars">&#9733;</label>
+                            <input type="radio" id="2-stars" name="rating" value="2" /><label for="2-stars">&#9733;</label>
+                            <input type="radio" id="1-star" name="rating" value="1" required /><label for="1-star">&#9733;</label>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="rating-comment" class="block text-sm font-medium text-text-muted">Your Review</label>
+                        <textarea id="rating-comment" class="form-input" rows="3" placeholder="Share your experience..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="star" class="btn-icon"></i>
+                        Submit Rating
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Existing Reviews -->
+            <div class="card-dark p-6 rounded-lg ${isMyProfile ? 'lg:col-span-2' : ''}">
+                <h3 class="text-xl font-bold text-white mb-6">Reviews (${totalRatings})</h3>
+                <div id="reviews-list" class="space-y-6 max-h-96 overflow-y-auto pr-2">
+                    ${totalRatings > 0 ? profileData.ratings.sort((a, b) => b.createdAt.toDate() - a.createdAt.toDate()).map(review => `
+                        <div class="flex gap-4">
+                            <img src="${review.raterPhotoURL || `https://placehold.co/40x40/0e1224/9fb1d9?text=${review.raterName.charAt(0)}`}" alt="${review.raterName}" class="w-10 h-10 rounded-full flex-shrink-0">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-semibold text-white">${review.raterName}</span>
+                                    <span class="flex items-center text-sm text-warning">
+                                        <i data-lucide="star" class="w-4 h-4" fill="currentColor"></i> ${review.rating}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-text-muted">${new Date(review.createdAt.toDate()).toLocaleDateString()}</p>
+                                <p class="text-white mt-2">${review.comment}</p>
+                            </div>
+                        </div>
+                    `).join('') : '<p class="text-text-muted">No reviews yet.</p>'}
+                </div>
+            </div>
+        </div>
+    `;
 
-    } catch (error) {
-        console.error("Error loading profile:", error);
-        profilePage.innerHTML = `<p class="text-center text-primary-red">Error: Could not load profile.</p>`;
-    }
+    // Add event listeners for this new dynamic content
+    addProfileEventListeners(userId, profileData);
+    lucide.createIcons(); // Re-draw icons
 };
 
-// --- Profile Edit Listeners ---
-const addProfileEditListeners = () => {
+// --- Add Listeners for Profile Page ---
+const addProfileEventListeners = (userId, profileData) => {
     const editBtn = document.getElementById('edit-profile-btn');
+    const saveBtn = document.getElementById('save-profile-btn');
     const cancelBtn = document.getElementById('cancel-edit-btn');
     const editForm = document.getElementById('profile-edit-form');
-    const descriptionP = document.getElementById('profile-description');
-
-    // Handle null elements if profile failed to render
-    if (!editBtn || !cancelBtn || !editForm || !descriptionP) return;
-
-    editBtn.addEventListener('click', () => {
-        editForm.classList.remove('hidden');
-        descriptionP.classList.add('hidden');
-        editBtn.classList.add('hidden');
-    });
-
-    cancelBtn.addEventListener('click', () => {
-        editForm.classList.add('hidden');
-        descriptionP.classList.remove('hidden');
-        editBtn.classList.remove('hidden');
-    });
-
-    editForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const newDesc = document.getElementById('edit-description').value;
-        const newLinks = {
-            mobile: document.getElementById('edit-mobile').value,
-            linkedin: document.getElementById('edit-linkedin').value,
-            github: document.getElementById('edit-github').value,
-            instagram: document.getElementById('edit-instagram').value,
-        };
-
-        try {
-            const userDocRef = doc(db, "users", auth.currentUser.uid);
-            await updateDoc(userDocRef, {
-                description: newDesc,
-                links: newLinks
-            });
-            
-            // Update local cache
-            currentUserProfile.description = newDesc;
-            currentUserProfile.links = newLinks;
-            
-            // Reload profile page to show changes
-            loadProfilePage(auth.currentUser.uid);
-            showToast("Profile updated successfully!");
-
-        } catch (error) {
-            console.error("Error updating profile:", error);
-            showToast("Failed to update profile.", true);
-        }
-    });
-};
-
-// --- Rating Form Listener ---
-const addRatingFormListener = (profileUserId) => {
-    const ratingForm = document.getElementById('rating-form');
+    const displaySection = document.getElementById('profile-display-section');
     
-    // Handle null element
-    if (!ratingForm) return;
-
-    ratingForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const rating = ratingForm.elements.rating.value;
-        const comment = document.getElementById('rating-comment').value;
-
-        if (!rating) {
-            showToast("Please select a star rating.", true);
-            return;
-        }
-
-        const raterId = auth.currentUser.uid;
-        const raterName = currentUserProfile.name;
-        
-        const newRating = {
-            raterId,
-            raterName,
-            rating: parseInt(rating),
-            comment,
-            createdAt: new Date() // Replaced serverTimestamp() with new Date()
-        };
-
-        try {
-            const userDocRef = doc(db, "users", profileUserId);
-            const userDocSnap = await getDoc(userDocRef);
-            const userData = userDocSnap.data();
-            
-            // Check if user already rated, remove old rating if so
-            const existingRatings = userData.ratings.filter(r => r.raterId !== raterId);
-            const updatedRatings = [...existingRatings, newRating];
-            
-            // Recalculate average rating
-            const totalRating = updatedRatings.reduce((sum, r) => sum + r.rating, 0);
-            const newAvgRating = totalRating / updatedRatings.length;
-
-            await updateDoc(userDocRef, {
-                ratings: updatedRatings,
-                avgRating: newAvgRating
-            });
-
-            showToast("Rating submitted!");
-            loadProfilePage(profileUserId); // Refresh profile to show new rating
-
-        } catch (error) {
-            console.error("Error submitting rating:", error);
-            showToast("Failed to submit rating.", true);
-        }
-    });
-};
-
-// --- Dashboard Logic ---
-const updateDashboard = async () => {
-    const dashboardContent = document.getElementById('dashboard-content');
-    
-    // Handle null element
-    if (!dashboardContent) return;
-
-    try {
-        // 1. Total Users
-        const usersSnapshot = await getCountFromServer(usersCollection);
-        const totalUsers = usersSnapshot.data().count;
-
-        // 2. Total Freelancers (users who posted > 0 services)
-        // We use the `allServices` cache for this
-        const freelancerIds = new Set(allServices.map(doc => doc.data().userId));
-        const totalFreelancers = freelancerIds.size;
-
-        // 3. Breakdown per category
-        const domainCounts = {};
-        allServices.forEach(doc => {
-            const domain = doc.data().domain;
-            domainCounts[domain] = (domainCounts[domain] || 0) + 1;
+    // Edit/Save/Cancel logic for *my* profile
+    if (editBtn) {
+        editBtn.addEventListener('click', () => {
+            editForm.classList.remove('hidden');
+            displaySection.classList.add('hidden');
+            saveBtn.classList.remove('hidden');
+            cancelBtn.classList.remove('hidden');
+            editBtn.classList.add('hidden');
         });
 
-        dashboardContent.innerHTML = `
-            <div class="flex justify-between text-white"><span>Total Users:</span> <span class="font-bold">${totalUsers}</span></div>
-            <div class="flex justify-between text-white"><span>Total Freelancers:</span> <span class="font-bold">${totalFreelancers}</span></div>
-            <hr class="border-muted-gray my-2">
-            <h4 class="text-sm font-semibold text-text-muted uppercase mb-2">Services Posted</h4>
-            ${Object.entries(domainCounts).map(([domain, count]) => `
-                <div class="flex justify-between text-sm text-text-light"><span>${domain}:</span> <span class="font-bold">${count}</span></div>
-            `).join('') || '<p class="text-sm text-text-muted">No services posted yet.</p>'}
-        `;
+        cancelBtn.addEventListener('click', () => {
+            editForm.classList.add('hidden');
+            displaySection.classList.remove('hidden');
+            saveBtn.classList.add('hidden');
+            cancelBtn.classList.add('hidden');
+            editBtn.classList.remove('hidden');
+            // Reset form to original data
+            document.getElementById('profile-desc').value = profileData.description;
+            document.getElementById('profile-linkedin').value = profileData.linkedin || '';
+            document.getElementById('profile-github').value = profileData.github || '';
+        });
 
-    } catch (error) {
-        console.error("Error updating dashboard:", error);
-        dashboardContent.innerHTML = `<p class="text-primary-red">Could not load stats.</p>`;
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            
+            const updatedData = {
+                description: document.getElementById('profile-desc').value,
+                linkedin: document.getElementById('profile-linkedin').value,
+                github: document.getElementById('profile-github').value,
+            };
+            
+            try {
+                const userDocRef = doc(db, 'users', userId);
+                await updateDoc(userDocRef, updatedData);
+                showToast('Profile updated successfully!', true);
+                
+                // Manually trigger cancel to reset UI
+                cancelBtn.click();
+                // Reload profile to show new data
+                loadProfilePage(userId);
+
+            } catch (error) {
+                console.error("Error updating profile:", error);
+                showToast('Failed to update profile.', false);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = `<i data-lucide="save" class="btn-icon"></i> Save Changes`;
+                lucide.createIcons();
+            }
+        });
+    }
+    
+    // Rating form logic for *other* profiles
+    const ratingForm = document.getElementById('rating-form');
+    if (ratingForm) {
+        ratingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const ratingInput = document.querySelector('.star-rating input:checked');
+            if (!ratingInput) {
+                showToast('Please select a star rating.', false);
+                return;
+            }
+            
+            const rating = ratingInput.value;
+            const comment = document.getElementById('rating-comment').value;
+            const raterId = currentAuthUser.uid;
+            const raterName = currentUserProfile.name;
+            const raterPhotoURL = currentUserProfile.photoURL;
+
+            // This is the new rating object
+            const newRating = {
+                raterId,
+                raterName,
+                raterPhotoURL,
+                rating: parseInt(rating),
+                comment,
+                createdAt: new Date() // Replaced serverTimestamp() with new Date()
+            };
+
+            try {
+                const userDocRef = doc(db, 'users', userId);
+                
+                // First, remove any existing rating from this user
+                await updateDoc(userDocRef, {
+                    ratings: arrayRemove(profileData.ratings.find(r => r.raterId === raterId))
+                });
+
+                // Then, add the new rating
+                await updateDoc(userDocRef, {
+                    ratings: arrayUnion(newRating)
+                });
+                
+                showToast('Rating submitted successfully!', true);
+                loadProfilePage(userId); // Reload profile to show new rating
+
+            } catch (error) {
+                console.error("Error submitting rating:", error);
+                showToast('Error submitting rating. Check permissions.', false);
+            }
+        });
     }
 };
 
@@ -560,110 +604,111 @@ const updateDashboard = async () => {
 // --- Render a single service card ---
 const renderService = (doc) => {
     const data = doc.data();
-    const card = document.createElement('div');
-    card.dataset.id = doc.id; 
-    card.className = 'card-dark rounded-lg shadow-lg overflow-hidden service-card';
-    card.dataset.domain = data.domain; // For filtering
+    const isOwner = currentAuthUser && currentAuthUser.uid === data.userId;
     
-    const timestamp = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
-    const isOwner = auth.currentUser && auth.currentUser.uid === data.userId;
+    const card = document.createElement('div');
+    card.className = 'card-dark service-card rounded-lg overflow-hidden'; // Added service-card class
+    card.dataset.domain = data.domain; // For filtering
     
     card.innerHTML = `
         <div class="p-6">
             <div class="flex items-start justify-between">
-                 <span class="inline-block bg-muted-gray/50 text-text-muted text-xs font-semibold px-2.5 py-0.5 rounded-full">${data.domain}</span>
-                 <span class="text-xs text-text-muted">${timestamp.toLocaleDateString()}</span>
+                 <span class="inline-block bg-panel-dark text-primary-red text-xs font-semibold px-2.5 py-0.5 rounded-full border border-primary-red/50">${data.domain}</span>
+                 <span class="text-xs text-text-muted">${new Date(data.createdAt?.toDate()).toLocaleDateString()}</span>
             </div>
-            <h3 class="text-lg font-bold mt-4 text-white">${data.title}</h3>
+            <h3 class="text-lg font-bold mt-4 text-white truncate">${data.title}</h3>
             <p class="mt-2 text-text-muted text-sm line-clamp-3">${data.description}</p>
+            
             <div class="mt-6 pt-4 border-t border-muted-gray flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-white">${data.userName || "Freelancer"}</p>
-                    <p class="text-xs text-text-muted">${data.userEmail}</p>
+                <!-- User Info -->
+                <div class="flex items-center gap-2">
+                    <img src="${data.userPhotoURL || `https://placehold.co/40x40/0e1224/9fb1d9?text=${data.userName.charAt(0)}`}" alt="${data.userName}" class="w-8 h-8 rounded-full">
+                    <div>
+                        <p class="text-sm font-medium text-white">${data.userName}</p>
+                        <p class="text-xs text-text-muted">${data.userEmail}</p>
+                    </div>
                 </div>
-                <div class="flex space-x-2">
-                    <button class="view-profile-btn btn btn-outline" data-user-id="${data.userId}">
-                        <i data-lucide="user" class="btn-icon"></i>Profile
+            </div>
+            <div class="mt-4 flex gap-2">
+                <!-- View Profile Button -->
+                <button class="btn btn-outline flex-1 view-profile-btn" data-userid="${data.userId}">
+                    <i data-lucide="user" class="btn-icon"></i>
+                    Profile
+                </button>
+                
+                <!-- Connect Button -->
+                <a href="mailto:${data.userEmail}?subject=Inquiry about your service: ${data.title}" class="btn btn-primary-sm flex-1">
+                    <i data-lucide="mail" class="btn-icon"></i>
+                    Connect
+                </a>
+                
+                <!-- Delete Button (Owner only) -->
+                ${isOwner ? `
+                    <button class="btn btn-danger-sm delete-service-btn" data-docid="${doc.id}">
+                        <i data-lucide="trash-2" class="btn-icon"></i>
                     </button>
-                    ${isOwner 
-                        ? `<button class="delete-btn btn btn-danger-sm" data-doc-id="${doc.id}">
-                                <i data-lucide="trash-2" class="btn-icon"></i>Delete
-                           </button>`
-                        : `<a href="mailto:${data.userEmail}?subject=Inquiry about your service: ${data.title}" class="btn btn-primary-sm">
-                                <i data-lucide="mail" class="btn-icon"></i>Connect
-                           </a>`
-                    }
-                </div>
+                ` : ''}
             </div>
         </div>
     `;
     servicesGrid.appendChild(card);
-}
-        
-// --- Fetch and display all services in real-time ---
-const fetchAndDisplayServices = () => {
-    if (unsubscribeServices) unsubscribeServices(); // Stop old listener
-    console.log("Setting up new snapshot listener for services...");
-    
-    // We fetch *without* ordering to avoid needing a Firestore Index
-    const q = query(servicesCollection);
-    
-    unsubscribeServices = onSnapshot(q, (snapshot) => {
-        console.log("Received services snapshot. Docs count:", snapshot.docs.length);
-        servicesGrid.innerHTML = ''; // Clear existing grid
-        
-        allServices = snapshot.docs.sort((a, b) => {
-            const dateA = a.data().createdAt?.toDate ? a.data().createdAt.toDate() : new Date(0);
-            const dateB = b.data().createdAt?.toDate ? b.data().createdAt.toDate() : new Date(0);
-            return dateB - dateA; // Sort descending (newest first)
-        });
-        
-        if(allServices.length === 0) {
-            noServicesMsg.classList.remove('hidden');
-        } else {
-            noServicesMsg.classList.add('hidden');
-            // Re-apply current filter
-             const activeFilter = document.querySelector('.btn-filter.active').dataset.filter;
-             filterServices(activeFilter);
-        }
-    }, (error) => {
-        console.error("Error fetching services: ", error);
-        servicesGrid.innerHTML = `<p class="text-primary-red col-span-full text-center">Error: ${error.message}</p>`;
-    });
-}
 
-// --- Service Card Button Listeners (Delete & View Profile) ---
-servicesGrid.addEventListener('click', async (e) => {
-    // Handle Delete
-    const deleteButton = e.target.closest('.delete-btn');
-    if (deleteButton) {
-        const docId = deleteButton.dataset.docId;
-        if (confirm("Are you sure you want to remove this service?")) {
+    // Add event listeners for dynamic buttons
+    card.querySelector('.view-profile-btn')?.addEventListener('click', (e) => {
+        const userId = e.currentTarget.dataset.userid;
+        navigateTo('profile-page');
+        loadProfilePage(userId);
+    });
+
+    card.querySelector('.delete-service-btn')?.addEventListener('click', async (e) => {
+        const docId = e.currentTarget.dataset.docid;
+        if (confirm('Are you sure you want to delete this service?')) {
             try {
-                await deleteDoc(doc(db, "services", docId));
-                showToast("Service removed successfully.");
-                // onSnapshot will handle the UI update
+                await deleteDoc(doc(db, 'services', docId));
+                showToast('Service deleted successfully.', true);
+                // The onSnapshot listener will handle removing it from the UI
             } catch (error) {
-                console.error("Error removing document: ", error);
-                showToast("Failed to remove service.", true);
+                console.error("Error deleting service:", error);
+                showToast('Failed to delete service.', false);
             }
         }
-    }
-    
-    // Handle View Profile
-    const profileButton = e.target.closest('.view-profile-btn');
-    if (profileButton) {
-        const userId = profileButton.dataset.userId;
-        loadProfilePage(userId);
-        navigateTo('profile');
-    }
-});
+    });
+};
 
+// --- Fetch and display all services in real-time ---
+const attachServiceListener = () => {
+    console.log('Setting up new snapshot listener for services...');
+    const q = query(servicesCollection); // Removed orderBy
+    
+    // Stop any previous listener
+    if (currentUnsubscribe) {
+        currentUnsubscribe();
+    }
+
+    currentUnsubscribe = onSnapshot(q, (snapshot) => {
+        console.log(`Received services snapshot. Docs count: ${snapshot.docs.length}`);
+        // Sort docs in JavaScript (descending by date)
+        allServices = snapshot.docs.sort((a, b) => 
+            (b.data().createdAt?.toDate() || 0) - (a.data().createdAt?.toDate() || 0)
+        );
+        
+        // Re-apply the current filter
+        const activeFilter = document.querySelector('.btn-filter.active').dataset.filter;
+        filterServices(activeFilter);
+        
+    }, (error) => {
+        console.error("Error fetching services:", error);
+        servicesGrid.innerHTML = `<p class="text-center text-primary-red col-span-full">${error.message}. Check console and Firebase Rules.</p>`;
+    });
+};
 
 // =======================================================
 //  MODAL LOGIC
 // =======================================================
-openModalBtn.addEventListener('click', () => modal.classList.remove('hidden'));
+openModalBtn.addEventListener('click', () => {
+    modal.classList.remove('hidden');
+    lucide.createIcons(); // Redraw icons in modal
+});
 closeModalBtn.addEventListener('click', () => {
     modal.classList.add('hidden');
     serviceForm.reset();
@@ -673,8 +718,8 @@ closeModalBtn.addEventListener('click', () => {
 // --- Handle new service form submission ---
 serviceForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!currentUserProfile) {
-        modalError.textContent = "You must be logged in to post a service.";
+    if (!currentAuthUser) {
+        modalError.textContent = "You must be logged in.";
         return;
     }
     
@@ -683,20 +728,32 @@ serviceForm.addEventListener('submit', async (e) => {
     const domain = document.getElementById('service-domain').value;
 
     try {
+        const submitBtn = serviceForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Posting...';
+        
         await addDoc(servicesCollection, {
-            title,
-            description,
-            domain,
-            userId: currentUserProfile.uid,
+            title: title,
+            description: description,
+            domain: domain,
+            userId: currentAuthUser.uid,
             userName: currentUserProfile.name,
-            userEmail: currentUserProfile.email,
+            userEmail: currentAuthUser.email,
+            userPhotoURL: currentUserProfile.photoURL,
             createdAt: serverTimestamp()
         });
-        closeModalBtn.click();
-        showToast("Service posted successfully!");
+        
+        closeModalBtn.click(); // Close and reset modal
+        showToast('Service posted successfully!', true);
+
     } catch (error) {
         console.error("Error adding document: ", error);
-        modalError.textContent = `Failed to post service: ${error.message}`;
+        modalError.textContent = "Failed to post service. Please try again.";
+    } finally {
+        const submitBtn = serviceForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i data-lucide="send" class="btn-icon"></i> Post Service`;
+        lucide.createIcons();
     }
 });
 
@@ -714,23 +771,18 @@ const filterServices = (filterValue) => {
         noServicesMsg.classList.add('hidden');
         filteredServices.forEach(doc => renderService(doc));
     } else {
-        noServicesMsg.classList.add('hidden'); // Show grid, but renderService won't run
-        noServicesMsg.classList.remove('hidden'); // Show no services message
+        noServicesMsg.classList.remove('hidden');
     }
     
-    // Re-render icons after filtering
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    } else {
-        console.error("Lucide is not loaded, cannot create icons.");
-    }
-}
+    // Redraw all icons after adding new cards
+    lucide.createIcons();
+};
 
 filterContainer.addEventListener('click', (e) => {
     if (e.target.classList.contains('btn-filter')) {
         // Update active button style
         filterContainer.querySelectorAll('.btn-filter').forEach(btn => {
-            btn.classList.remove('active');
+            btn.classList.remove('active'); // 'active' class handles styling via CSS
         });
         e.target.classList.add('active');
 
@@ -739,5 +791,4 @@ filterContainer.addEventListener('click', (e) => {
         filterServices(filterValue);
     }
 });
-
 
