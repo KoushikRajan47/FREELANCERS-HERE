@@ -576,10 +576,17 @@ const addProfileEventListeners = (userId, profileData) => {
             try {
                 const userDocRef = doc(db, 'users', userId);
                 
-                // First, remove any existing rating from this user
-                await updateDoc(userDocRef, {
-                    ratings: arrayRemove(profileData.ratings.find(r => r.raterId === raterId))
-                });
+                // === FIX HERE ===
+                // Find any existing rating from this user
+                const existingRating = profileData.ratings.find(r => r.raterId === raterId);
+
+                // If an existing rating was found, we must remove it first
+                if (existingRating) {
+                    await updateDoc(userDocRef, {
+                        ratings: arrayRemove(existingRating)
+                    });
+                }
+                // === END FIX ===
 
                 // Then, add the new rating
                 await updateDoc(userDocRef, {
@@ -591,7 +598,7 @@ const addProfileEventListeners = (userId, profileData) => {
 
             } catch (error) {
                 console.error("Error submitting rating:", error);
-                showToast('Error submitting rating. Check permissions.', false);
+                showToast('Error submitting rating. Check console.', false);
             }
         });
     }
