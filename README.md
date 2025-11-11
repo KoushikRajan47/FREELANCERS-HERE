@@ -1,1 +1,3 @@
-# FREELANCERS-HERE
+Pre_parking is a straightforward web app designed to make parking hassle-free by allowing users to view available spots and book them in advance, ensuring a stress-free arrival. The application is easy to use and consists of three main files: an HTML file for structure, a CSS file for styling, and a JavaScript file for basic logic to select and reserve parking spots. To get started, simply clone the repository and open the index.html file in your browser, where you'll be able to check parking options and book your spot with just a few clicks. The project is open source under the MIT License, welcoming anyone interested to use or improve it, with hopes of making finding a parking space a little easier for everyone.
+
+for your reference try using this link : https://pre-parking-one.vercel.app/
